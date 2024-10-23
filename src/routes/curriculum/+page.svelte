@@ -113,19 +113,19 @@
 						<input type="tel" bind:value={$phone} placeholder="Teléfono" name="phone" />
 					</div>
 
-					<!-- Linkedin -->
-					<label for="linkedin">URL de Linkedin:</label>
-					<input
-						type="url"
-						id="linkedin"
-						name="linkedin"
-						placeholder="Enlace de perfil de Linkedin"
-						bind:value={linkedinURL}
-					/>
-
-					<!-- CV -->
 					{#if !noCurriculum}
-						<div out:slide>
+						<div out:slide in:slide={{ duration: 100 }}>
+							<!-- Linkedin -->
+							<label for="linkedin">URL de Linkedin:</label>
+							<input
+								type="url"
+								id="linkedin"
+								name="linkedin"
+								placeholder="Enlace de perfil de Linkedin"
+								bind:value={linkedinURL}
+							/>
+
+							<!-- CV -->
 							<label for="cv">CV:</label>
 							<label
 								bind:this={cvLabel}
@@ -152,7 +152,7 @@
 					{/if}
 
 					<!-- Checkbox - No CV -->
-					<div class="checkbox-container hide">
+					<div class="checkbox-container">
 						<label for="noCV">¿No tienes un currículum?</label>
 						<input type="checkbox" name="noCV" id="noCV" bind:checked={noCurriculum} />
 					</div>
@@ -160,7 +160,8 @@
 					{#if noCurriculum}
 						<div
 							class="noCurriculum"
-							transition:slide
+							in:slide
+							out:slide={{ duration: 100 }}
 							style="padding-top: 1rem; margin-bottom: -1rem;"
 						>
 							<Separator width="100%" margin="0 0 3rem" color="#fff" height="1px" />
@@ -230,29 +231,6 @@
 									>No, pero he tenido logros significativos en mi trabajo</option
 								>
 								<option>No</option>
-							</select>
-
-							<!-- Proyecto o Plan que beneficiaría a EE.UU. -->
-							<label for="project"
-								>¿Tienes un proyecto o plan de trabajo que beneficiaría a EE.UU.?</label
-							>
-							<select id="project" name="project" required>
-								<option value="" disabled selected>Selecciona una opción</option>
-								<option
-									>Sí, tengo un proyecto definido que beneficiará a EE.UU.</option
-								>
-								<option
-									>Estoy trabajando en un proyecto que podría ser beneficioso para
-									EE.UU.</option
-								>
-								<option
-									>No tengo un proyecto concreto, pero mis habilidades y
-									experiencia son valiosas para EE.UU.</option
-								>
-								<option
-									>No tengo un proyecto específico, quiero que me ayuden a
-									crearlo.</option
-								>
 							</select>
 						</div>
 					{/if}

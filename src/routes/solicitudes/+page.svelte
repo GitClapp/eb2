@@ -47,8 +47,8 @@
 				!filterText ||
 				`${solicitud.fullName}${solicitud.email}${solicitud.phone}${solicitud.linkedin}${
 					solicitud.academicLevel
-				}${solicitud.yearsOfExperience}${solicitud.currentField}${solicitud.awards}${
-					solicitud.project
+				}${solicitud.yearsOfExperience}${solicitud.currentField}${
+					solicitud.awards
 				}${formatDateTime('human', solicitud.date)}`
 					.toLowerCase()
 					.includes(filterText.toLowerCase()),
@@ -65,7 +65,6 @@
 				yearsOfExperience,
 				currentField,
 				awards,
-				project,
 			}) => ({
 				Nombre: fullName,
 				Email: email,
@@ -75,7 +74,6 @@
 				Años_Experiencia: yearsOfExperience,
 				Campo_Profesional: currentField,
 				Reconocimientos: awards,
-				Proyecto_Beneficio_EEUU: project,
 				Fecha: formatDateTime('human', date),
 			}),
 		);
@@ -135,7 +133,7 @@
 	</div>
 
 	<div class="cards">
-		{#each solicitudes.filter((solicitud) => !filterText || `${solicitud.fullName}${solicitud.email}${solicitud.phone}${solicitud.linkedin}${solicitud.academicLevel}${solicitud.yearsOfExperience}${solicitud.currentField}${solicitud.awards}${solicitud.project}${formatDateTime('human', solicitud.date)}`
+		{#each solicitudes.filter((solicitud) => !filterText || `${solicitud.fullName}${solicitud.email}${solicitud.phone}${solicitud.linkedin}${solicitud.academicLevel}${solicitud.yearsOfExperience}${solicitud.currentField}${solicitud.awards}${formatDateTime('human', solicitud.date)}`
 					.toLowerCase()
 					.includes(filterText.toLowerCase())) as solicitud (solicitud.id)}
 			<div
@@ -194,12 +192,6 @@
 						<p>
 							🏆 <strong>Reconocimientos:</strong>
 							<span>{solicitud.awards}</span>
-						</p>
-					{/if}
-					{#if solicitud.project}
-						<p>
-							📑 <strong>Proyecto que beneficia a EE.UU.:</strong>
-							<span>{solicitud.project}</span>
 						</p>
 					{/if}
 					{#if solicitud.date}

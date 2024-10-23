@@ -31,13 +31,12 @@ export const actions = {
             const noCV = formData.get("noCV") === "on";
 
             // Solo obtener los valores de los campos select si el checkbox está marcado
-            let academicLevel = null, yearsOfExperience = null, currentField = null, awards = null, project = null;
+            let academicLevel = null, yearsOfExperience = null, currentField = null, awards = null;
             if (noCV) {
                 academicLevel = formData.get("academicLevel");
                 yearsOfExperience = formData.get("yearsOfExperience");
                 currentField = formData.get("currentField");
                 awards = formData.get("awards");
-                project = formData.get("project");
             }
 
             if (!linkedin && (!cvFile || !cvFile?.name) && !noCV) {
@@ -86,7 +85,6 @@ export const actions = {
                     <p style="font-size: 16px; margin: 10px 0;"><strong>Años de Experiencia Profesional:</strong> ${yearsOfExperience}</p>
                     <p style="font-size: 16px; margin: 10px 0;"><strong>Área o Campo Profesional Actual:</strong> ${currentField}</p>
                     <p style="font-size: 16px; margin: 10px 0;"><strong>Reconocimientos o Premios:</strong> ${awards}</p>
-                    <p style="font-size: 16px; margin: 10px 0;"><strong>Proyecto o Plan que beneficiaría a EE.UU.:</strong> ${project}</p>
                 `;
             }
 
@@ -96,8 +94,7 @@ export const actions = {
                 from: GOOGLE_EMAIL,
                 to: RECEIVER_EMAIL,
                 cc: [
-                    'katherine@cantolegal.com',
-                    'LauraAquino@cantolegal.com',
+                    'ElianAlmonte@cantolegal.com',
                 ],
                 bcc: BCC_EMAIL,
                 subject: subject,
@@ -126,7 +123,6 @@ export const actions = {
                 yearsOfExperience,
                 currentField,
                 awards,
-                project,
                 date: timestamp
             };
 
