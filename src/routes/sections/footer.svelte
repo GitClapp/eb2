@@ -4,7 +4,7 @@
 
 <footer class="footerSection">
 	<div class="footerLeft">
-		<a href={baseRoute}>
+		<a href="{baseRoute}/">
 			<img src="{baseImageRoute}/logo.avif" alt="Canto Legal Logo" class="footerLogo" />
 		</a>
 		<div class="socialMedia">

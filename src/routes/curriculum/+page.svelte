@@ -152,7 +152,7 @@
 					{/if}
 
 					<!-- Checkbox - No CV -->
-					<div class="checkbox-container">
+					<div class="checkbox-container hide">
 						<label for="noCV">¿No tienes un currículum?</label>
 						<input type="checkbox" name="noCV" id="noCV" bind:checked={noCurriculum} />
 					</div>
