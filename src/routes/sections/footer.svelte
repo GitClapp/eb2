@@ -43,13 +43,7 @@
 	</div>
 
 	<div class="footerRight">
-		<a href="{baseRoute}/solicitudes" target="_blank" rel="noopener noreferrer">
-			<img
-				src="{baseImageRoute}/expertiseAward.webp"
-				alt="Expertise Award"
-				class="awardImage"
-			/>
-		</a>
+		<img src="{baseImageRoute}/expertiseAward.webp" alt="Expertise Award" class="awardImage" />
 		<p>Law office of Katherine Canto &copy; 2024, todos los derechos reservados.</p>
 		<p class="disclaimer">
 			La abogada Katherine Canto es miembro del Colegio de Abogados del Estado de Washington,
