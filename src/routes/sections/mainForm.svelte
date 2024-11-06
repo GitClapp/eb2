@@ -1,14 +1,24 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { phoneFormat } from '../functions';
+	import toast from 'svelte-french-toast';
+	import PhoneInput from '../components/phoneInput.svelte';
 	import { baseImageRoute, baseRoute, email, fullName, phone } from '../stores';
 
 	// Form submit handler
 	function handleSubmit() {
+		if (!valid && $phone && $phone.length > 0) {
+			toast.error('El número telefónico no es valido', {
+				style: 'font-size: 1.2em;',
+			});
+			return;
+		}
+
+		$fullName = $fullName?.trim();
+
 		goto(`${baseRoute}/curriculum`);
 	}
 
-	let phoneField: HTMLInputElement;
+	let valid: boolean;
 </script>
 
 <div class="mainForm" style="background-image: url('{baseImageRoute}/landing.jpg');">
@@ -36,13 +46,7 @@
 	<form id="evaluacion-gratuita" on:submit|preventDefault={handleSubmit} class="evaluationForm">
 		<input required type="text" bind:value={$fullName} placeholder="Nombre Completo" />
 		<input required type="email" bind:value={$email} placeholder="Correo Electrónico" />
-		<input
-			type="tel"
-			bind:this={phoneField}
-			on:input={() => phoneFormat(phoneField)}
-			bind:value={$phone}
-			placeholder="Teléfono"
-		/>
+		<PhoneInput bind:value={$phone} bind:valid required={false} />
 		<button type="submit">Quiero una evaluación gratuita</button>
 	</form>
 </div>
@@ -120,6 +124,7 @@
 	.evaluationForm {
 		display: flex;
 		flex-direction: column;
+		color: var(--content);
 		gap: 15px;
 		width: 100%;
 		max-width: 500px;
