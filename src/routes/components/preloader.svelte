@@ -60,14 +60,15 @@
 		height: 100dvh;
 		z-index: 1000;
 
-		background-color: #f27931;
+		background-color: rgba(0, 16, 48);
 	}
 
 	.default {
 		display: inline-block;
 		position: relative;
-		width: 70px;
-		height: 70px;
+		width: 80px;
+		height: 80px;
+		transform: scale(0.8);
 	}
 	.default div {
 		box-sizing: border-box;

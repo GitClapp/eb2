@@ -69,7 +69,7 @@
 			<img
 				src="{baseImageRoute}/logo.avif"
 				width="200"
-				style="margin-bottom: 3rem;"
+				style="margin-bottom: 2rem;"
 				alt="Logo"
 			/>
 		</Preloader>
