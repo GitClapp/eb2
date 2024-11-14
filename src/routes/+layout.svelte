@@ -1,7 +1,7 @@
 <script lang="ts">
 	import './app.css';
 	import { Toaster } from 'svelte-french-toast';
-	import { baseImageRoute, language } from './stores';
+	import { baseImageRoute, language, ready } from './stores';
 	import { sleep } from './functions';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
@@ -20,13 +20,12 @@
 		disappearAndAppear = false;
 	}
 
-	let ready: boolean = false;
 	$: $page.url.pathname, goTop();
 	let mainContent: HTMLElement;
 	let goTop: () => void = () => {};
 
 	onMount(() => {
-		ready = true;
+		$ready = true;
 
 		goTop = () => {
 			if (document) {
@@ -65,9 +64,14 @@
 
 	<Footer />
 
-	{#if !ready}
-		<Preloader animation="dots">
-			<img src="{baseImageRoute}/logo-small.jpg" alt="Logo" />
+	{#if !$ready}
+		<Preloader animation="default">
+			<img
+				src="{baseImageRoute}/logo.avif"
+				width="200"
+				style="margin-bottom: 3rem;"
+				alt="Logo"
+			/>
 		</Preloader>
 	{/if}
 </div>

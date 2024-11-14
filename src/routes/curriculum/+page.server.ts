@@ -207,7 +207,7 @@ export const actions = {
 
             html += `</div>`;
 
-            // Obtener la evaluación de AI
+            // Obtener la evaluación de IA
             let AIEvaluation: string | null = null;
             if (noCV) {
                 AIEvaluation = await evaluateProfileWithAI(`

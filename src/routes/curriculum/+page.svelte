@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
-	import { baseImageRoute, baseRoute, email, fullName, phone } from '../stores';
+	import { baseImageRoute, baseRoute, email, fullName, phone, ready } from '../stores';
 	import toast from 'svelte-french-toast';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
@@ -44,6 +44,7 @@
 	}
 
 	function feedbackMessage() {
+		$ready = true;
 		if (form?.success) {
 			deleteFile();
 			toast.success('Solicitud enviada correctamente.', { style: 'font-size: 1.2em;' });
@@ -94,6 +95,7 @@
 							style: 'font-size: 1.2em;',
 						});
 						isSubmitting = true;
+						$ready = false;
 					}
 				}}
 			>

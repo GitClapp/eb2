@@ -60,14 +60,14 @@
 		height: 100dvh;
 		z-index: 1000;
 
-		background-color: var(--main);
+		background-color: #f27931;
 	}
 
 	.default {
 		display: inline-block;
 		position: relative;
-		width: 80px;
-		height: 80px;
+		width: 70px;
+		height: 70px;
 	}
 	.default div {
 		box-sizing: border-box;
@@ -76,10 +76,10 @@
 		width: 70px;
 		height: 70px;
 		margin: 8px;
-		border: 8px solid var(--content);
+		border: 8px solid #fff;
 		border-radius: 50%;
 		animation: default 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-		border-color: var(--content) transparent transparent transparent;
+		border-color: #fff transparent transparent transparent;
 	}
 	.default div:nth-child(1) {
 		animation-delay: -0.45s;
@@ -110,7 +110,7 @@
 		width: calc(13 / 16 * 1em);
 		height: calc(13 / 16 * 1em);
 		border-radius: 50%;
-		background: var(--content);
+		background: #fff;
 		animation-timing-function: cubic-bezier(0, 1, 1, 0);
 	}
 	.dots div:nth-child(1) {
@@ -162,7 +162,7 @@
 		height: calc(64 / 16 * 1em);
 		margin: calc(8 / 16 * 1em);
 		border-radius: 50%;
-		background: var(--content);
+		background: #fff;
 		animation: circle 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
 	}
 	@keyframes circle {
@@ -199,7 +199,7 @@
 		width: calc(6 / 16 * 1em);
 		height: calc(18 / 16 * 1em);
 		border-radius: 20%;
-		background: var(--content);
+		background: #fff;
 	}
 	.spinner div:nth-child(1) {
 		transform: rotate(0deg);

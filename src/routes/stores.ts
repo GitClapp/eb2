@@ -6,6 +6,8 @@ export const fullName: Writable<string> = createPersistentStore('fullName', '');
 export const email: Writable<string> = createPersistentStore('email', '');
 export const phone: Writable<string> = createPersistentStore('phone', '');
 
+export const ready: Writable<boolean> = writable(false);
+
 // Base Routes
 export const baseRoute = '';
 export const baseImageRoute = `/images` + baseRoute;
