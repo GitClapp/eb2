@@ -90,6 +90,9 @@
 							style: 'font-size: 1.2em;',
 						});
 					} else {
+						toast('Esto puede tomar un momento. Por favor sé paciente.', {
+							style: 'font-size: 1.2em;',
+						});
 						isSubmitting = true;
 					}
 				}}

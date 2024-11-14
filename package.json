@@ -36,6 +36,7 @@
 	"dependencies": {
 		"firebase": "^10.9.0",
 		"nodemailer": "^6.9.15",
+		"openai": "^4.71.0",
 		"svelte-french-toast": "^1.0.3",
 		"svelte-tel-input": "^3.5.2",
 		"xlsx": "^0.18.5"

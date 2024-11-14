@@ -1,6 +1,7 @@
 import { BCC_EMAIL, GOOGLE_EMAIL, RECEIVER_EMAIL } from "$env/static/private";
 import transporter from "$lib/email/eb2.server";
 import { db } from "$lib/firebase/eb2.server";
+import { openai } from "$lib/openai/eb2.server";
 import { addDoc, collection } from 'firebase/firestore';
 import type { Options } from "nodemailer/lib/mailer";
 
@@ -16,6 +17,122 @@ const sendEmail = async (message: Options) => {
         });
     });
 };
+
+const evaluateFileWithAI = async (cvFile: File, name: string): Promise<string | null> => {
+    try {
+        const arrayBuffer = await cvFile.arrayBuffer();
+        const curriculum = new File([arrayBuffer], cvFile.name, { type: cvFile.type, lastModified: cvFile.lastModified });
+
+        let thread;
+        if (cvFile.type.startsWith("image/")) {
+            const file = await openai.files.create({
+                file: curriculum,
+                purpose: "vision",
+            });
+            thread = await openai.beta.threads.create({
+                messages: [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": `Mi nombre es ${name}. Por favor, evalúa mi curriculum.`
+                            },
+                            {
+                                "type": "image_file",
+                                "image_file": { "file_id": file.id }
+                            },
+                        ]
+                    }
+                ]
+            });
+        } else {
+            const file = await openai.files.create({
+                file: curriculum,
+                purpose: "assistants",
+            });
+
+            thread = await openai.beta.threads.create({
+                messages: [
+                    {
+                        "role": "user",
+                        "content": `Mi nombre es ${name}. Por favor, evalúa mi curriculum.`,
+                        "attachments": [
+                            {
+                                file_id: file.id,
+                                tools: [{ type: "code_interpreter" }]
+                            }
+                        ]
+                    }
+                ]
+            });
+        }
+
+        const run = await openai.beta.threads.runs.createAndPoll(
+            thread.id,
+            { assistant_id: "asst_PDMHHn6ZRThkMWwBXd8k7HXF" }
+        );
+
+        if (run.status === 'completed') {
+            const messages = await openai.beta.threads.messages.list(
+                run.thread_id
+            );
+
+            const lastMessage = messages.data[0].content[0];
+            if (lastMessage.type === 'text') {
+                return lastMessage.text.value;
+            } else {
+                console.log(`Last message isn't a text.`);
+                return null;
+            }
+        } else {
+            console.log(run.status);
+            return null;
+        }
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
+const evaluateProfileWithAI = async (message: string): Promise<string | null> => {
+    try {
+        const thread = await openai.beta.threads.create({
+            messages: [
+                {
+                    "role": "user",
+                    "content": message,
+                }
+            ]
+        });
+
+        const run = await openai.beta.threads.runs.createAndPoll(
+            thread.id,
+            { assistant_id: "asst_PDMHHn6ZRThkMWwBXd8k7HXF" }
+        );
+
+        if (run.status === 'completed') {
+            const messages = await openai.beta.threads.messages.list(
+                run.thread_id
+            );
+
+            const lastMessage = messages.data[0].content[0];
+            if (lastMessage.type === 'text') {
+                return lastMessage.text.value;
+            } else {
+                console.log(`Last message isn't a text.`);
+                return null;
+            }
+        } else {
+            console.log(run.status);
+            return null;
+        }
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
+}
+
 
 export const actions = {
     default: async ({ request }) => {
@@ -56,7 +173,7 @@ export const actions = {
             // Construir el contenido del email
             let html = `
                 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
-                    <h1 style="background-color: #f27931; font-size: 1.5rem; color: white; padding: 10px; border-radius: 5px;">
+                    <h1 style="font-size: 1.3rem; color: #f27931;">
                         Solicitud de Evaluación EB2
                     </h1>
                     <p style="font-size: 16px; margin: 10px 0; color: inherit;">
@@ -89,6 +206,30 @@ export const actions = {
             }
 
             html += `</div>`;
+
+            // Obtener la evaluación de AI
+            let AIEvaluation: string | null = null;
+            if (noCV) {
+                AIEvaluation = await evaluateProfileWithAI(`
+                        Nombre Completo: ${fullName}
+                        Nivel Académico: ${academicLevel}
+                        Años de Experiencia Profesional: ${yearsOfExperience}
+                        Área o Campo Profesional Actual: ${currentField}
+                        Reconocimientos o Premios: ${awards}
+                    `);
+            } else if (cvFile?.name) {
+                AIEvaluation = await evaluateFileWithAI(cvFile, fullName as string);
+            }
+
+            // Agregar sección de "Evaluación Inicial" si AIEvaluation no es nulo
+            if (AIEvaluation) {
+                html += `
+                    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111; margin-top: 2.5rem">
+                        <h2 style="font-size: 1.3rem; color: #f27931; margin: 0;">Evaluación Inicial</h2>
+                        ${formatAIEvaluation(AIEvaluation)}
+                    </div>
+                `;
+            }
 
             const message = {
                 from: GOOGLE_EMAIL,
@@ -143,3 +284,19 @@ export const actions = {
         }
     },
 };
+
+function formatAIEvaluation(response: string): string {
+    // Reemplaza **texto** por <strong>texto</strong> para negritas
+    let formattedResponse = response.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+    // Reemplaza ### Título con <h3>Título</h3> para subtítulos
+    formattedResponse = formattedResponse.replace(/^###\s*(.*)$/gm, "<h3>$1</h3>");
+
+    // Divide el texto en párrafos
+    formattedResponse = formattedResponse
+        .split(/\n\s*\n|\n\d+\.\s/) // Dividir por líneas en blanco o números de sección
+        .map(paragraph => `<p style="font-size: 16px; margin: 10px 0; color: inherit;">${paragraph.trim()}</p>`) // Envolver cada sección en <p>
+        .join("");
+
+    return formattedResponse;
+}
