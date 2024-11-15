@@ -87,11 +87,11 @@
 						!noCurriculum
 					) {
 						event.preventDefault();
-						toast.error('Por favor ingresa un archivo CV o una URL de Linkedin.', {
+						toast.error('Por favor, ingresa un archivo CV o una URL de Linkedin.', {
 							style: 'font-size: 1.2em;',
 						});
 					} else {
-						toast('Esto puede tomar un momento. Por favor sé paciente.', {
+						toast('Esto puede tomar un momento. Por favor, sé paciente.', {
 							style: 'font-size: 1.2em;',
 						});
 						isSubmitting = true;
