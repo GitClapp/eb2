@@ -1,4 +1,4 @@
-import { derived, get, writable, type Writable } from 'svelte/store';
+import { derived, writable, type Writable } from 'svelte/store';
 import { translator } from './translator';
 import { browser } from "$app/environment";
 
@@ -11,7 +11,6 @@ export const ready: Writable<boolean> = writable(false);
 // Base Routes
 export const baseRoute = '';
 export const baseImageRoute = `/images` + baseRoute;
-
 
 // Language Management
 export type Language = 'es';

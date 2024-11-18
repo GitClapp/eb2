@@ -2,6 +2,7 @@
 	import toast from 'svelte-french-toast';
 	import { receive, send } from '../transitions.js';
 	import { flip } from 'svelte/animate';
+	import Login from '../sections/login.svelte';
 
 	export let data;
 	const solicitudes = data.solicitudes.sort((a, b) => {
@@ -107,103 +108,126 @@
 			toast.error('Ha ocurrido un error descargando los datos.');
 		}
 	};
+
+	const autenticado = data.autenticado;
+	export let form;
+	$: form, feedbackMessage();
+
+	function feedbackMessage() {
+		if (form?.error) {
+			toast.error(form.error);
+		}
+	}
 </script>
 
 <svelte:head>
-	<title>Solicitudes de evaluación de perfil</title>
+	<title
+		>{autenticado ? 'Solicitudes de Evaluación de Perfil' : 'Autenticación de Identidad'}</title
+	>
 	<meta name="description" content="" />
 </svelte:head>
 
-<div class="solicitudes">
-	<h1>Lista de Solicitudes</h1>
-	<div class="controls">
-		<div class="search-container">
-			<ion-icon name="search" />
-			<input
-				type="text"
-				name="filter"
-				id="filter"
-				bind:value={filterText}
-				placeholder="Buscar solicitudes..."
-			/>
-		</div>
-		<button class="download" on:click={downloadExcel}>
-			<ion-icon name="download-outline" />
-		</button>
-	</div>
-
-	<div class="cards">
-		{#each solicitudes.filter((solicitud) => !filterText || `${solicitud.fullName}${solicitud.email}${solicitud.phone}${solicitud.linkedin}${solicitud.academicLevel}${solicitud.yearsOfExperience}${solicitud.currentField}${solicitud.awards}${formatDateTime('human', solicitud.date)}`
-					.toLowerCase()
-					.includes(filterText.toLowerCase())) as solicitud (solicitud.id)}
-			<div
-				class="solicitudCard"
-				in:receive|global={{ key: solicitud.id }}
-				out:send|global={{ key: solicitud.id }}
-				animate:flip={{ duration: 400 }}
-			>
-				<div class="solicitudCard-header">
-					<h2>{solicitud.fullName}</h2>
-				</div>
-				<div class="solicitudCard-body">
-					<p>
-						📧 <strong>Email:</strong>
-						{#if solicitud.email}
-							<a href="mailto:{solicitud.email}">{solicitud.email}</a>
-						{:else}
-							<span>No proporcionado.</span>
-						{/if}
-					</p>
-					<p>
-						📞 <strong>Teléfono:</strong>
-						{#if solicitud.phone}
-							<a href="tel:{solicitud.phone}">{solicitud.phone}</a>
-						{:else}
-							<span>No proporcionado.</span>
-						{/if}
-					</p>
-					<p>
-						🔗 <strong>LinkedIn:</strong>
-						{#if solicitud.linkedin}
-							<a href={solicitud.linkedin} target="_blank">{solicitud.linkedin}</a>
-						{:else}
-							<span>No proporcionado.</span>
-						{/if}
-					</p>
-					{#if solicitud.academicLevel}
-						<p>
-							🎓 <strong>Nivel Académico:</strong>
-							<span>{solicitud.academicLevel}</span>
-						</p>
-					{/if}
-					{#if solicitud.yearsOfExperience}
-						<p>
-							📅 <strong>Años de Experiencia:</strong>
-							<span>{solicitud.yearsOfExperience}</span>
-						</p>
-					{/if}
-					{#if solicitud.currentField}
-						<p>
-							💼 <strong>Campo Profesional:</strong>
-							<span>{solicitud.currentField}</span>
-						</p>
-					{/if}
-					{#if solicitud.awards}
-						<p>
-							🏆 <strong>Reconocimientos:</strong>
-							<span>{solicitud.awards}</span>
-						</p>
-					{/if}
-					{#if solicitud.date}
-						<span class="date">{formatDateTime('human', solicitud.date)}</span>
-					{/if}
-				</div>
+{#if autenticado}
+	<div class="solicitudes">
+		<h1>Lista de Solicitudes</h1>
+		<div class="controls">
+			<div class="search-container">
+				<ion-icon name="search" />
+				<input
+					type="text"
+					name="filter"
+					id="filter"
+					bind:value={filterText}
+					placeholder="Buscar solicitudes..."
+				/>
 			</div>
-		{:else}
-			<p>No hay solicitudes para mostrar.</p>
-		{/each}
+			<button class="download" on:click={downloadExcel}>
+				<ion-icon name="download-outline" />
+			</button>
+		</div>
+
+		<div class="cards">
+			{#each solicitudes.filter((solicitud) => !filterText || `${solicitud.fullName}${solicitud.email}${solicitud.phone}${solicitud.linkedin}${solicitud.academicLevel}${solicitud.yearsOfExperience}${solicitud.currentField}${solicitud.awards}${formatDateTime('human', solicitud.date)}`
+						.toLowerCase()
+						.includes(filterText.toLowerCase())) as solicitud (solicitud.id)}
+				<div
+					class="solicitudCard"
+					in:receive|global={{ key: solicitud.id }}
+					out:send|global={{ key: solicitud.id }}
+					animate:flip={{ duration: 400 }}
+				>
+					<div class="solicitudCard-header">
+						<h2>{solicitud.fullName}</h2>
+					</div>
+					<div class="solicitudCard-body">
+						<p>
+							📧 <strong>Email:</strong>
+							{#if solicitud.email}
+								<a href="mailto:{solicitud.email}">{solicitud.email}</a>
+							{:else}
+								<span>No proporcionado.</span>
+							{/if}
+						</p>
+						<p>
+							📞 <strong>Teléfono:</strong>
+							{#if solicitud.phone}
+								<a href="tel:{solicitud.phone}">{solicitud.phone}</a>
+							{:else}
+								<span>No proporcionado.</span>
+							{/if}
+						</p>
+						<p>
+							🔗 <strong>LinkedIn:</strong>
+							{#if solicitud.linkedin}
+								<a href={solicitud.linkedin} target="_blank">{solicitud.linkedin}</a
+								>
+							{:else}
+								<span>No proporcionado.</span>
+							{/if}
+						</p>
+						{#if solicitud.academicLevel}
+							<p>
+								🎓 <strong>Nivel Académico:</strong>
+								<span>{solicitud.academicLevel}</span>
+							</p>
+						{/if}
+						{#if solicitud.yearsOfExperience}
+							<p>
+								📅 <strong>Años de Experiencia:</strong>
+								<span>{solicitud.yearsOfExperience}</span>
+							</p>
+						{/if}
+						{#if solicitud.currentField}
+							<p>
+								💼 <strong>Campo Profesional:</strong>
+								<span>{solicitud.currentField}</span>
+							</p>
+						{/if}
+						{#if solicitud.awards}
+							<p>
+								🏆 <strong>Reconocimientos:</strong>
+								<span>{solicitud.awards}</span>
+							</p>
+						{/if}
+						{#if solicitud.date}
+							<span class="date">{formatDateTime('human', solicitud.date)}</span>
+						{/if}
+					</div>
+				</div>
+			{:else}
+				<p>No hay solicitudes para mostrar.</p>
+			{/each}
+		</div>
+		<form method="POST" action="?/logout" class="logoutForm">
+			<button type="submit" class="logoutButton">
+				<ion-icon name="log-out-outline" class="logoutIcon" />
+				Cerrar sesión
+			</button>
+		</form>
 	</div>
-</div>
+{:else}
+	<Login />
+{/if}
 
 <style>
 	.solicitudes {
@@ -361,6 +385,35 @@
 
 	.solicitudCard-body a:hover {
 		text-decoration: underline;
+	}
+
+	.logoutForm {
+		display: grid;
+		justify-items: center;
+		margin-top: 3rem;
+	}
+
+	.logoutButton {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem; /* Space between icon and text */
+		padding: 0.5rem 1rem;
+		background-color: #f27931;
+		font-size: 1em;
+		color: white;
+		border: none;
+		border-radius: 5px;
+		cursor: pointer;
+		transition: background-color 0.3s;
+	}
+
+	.logoutButton:hover {
+		background-color: #e36b29;
+	}
+
+	.logoutIcon {
+		font-size: 1.2em; /* Adjust icon size */
 	}
 
 	@media screen and (max-width: 500px) {

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { baseImageRoute, baseRoute } from '../stores'; // Importing the baseImageRoute
+
+	const currentYear = new Date().getFullYear();
 </script>
 
 <footer class="footerSection">
@@ -44,7 +46,9 @@
 
 	<div class="footerRight">
 		<img src="{baseImageRoute}/expertiseAward.webp" alt="Expertise Award" class="awardImage" />
-		<p>Law office of Katherine Canto &copy; 2024, todos los derechos reservados.</p>
+		<p>
+			Law office of Katherine Canto &copy; {currentYear}, todos los derechos reservados.
+		</p>
 		<p class="disclaimer">
 			La abogada Katherine Canto es miembro del Colegio de Abogados del Estado de Washington,
 			D.C. La información contenida en esta página electrónica, es solo con fines de
@@ -52,6 +56,7 @@
 			representación. El uso de esta página no crea alguna relación de abogado-cliente entre
 			Katherine Canto y el lector.
 		</p>
+		<a href="{baseRoute}/solicitudes" class="admin">Panel de administración</a>
 	</div>
 </footer>
 
@@ -126,6 +131,11 @@
 		font-style: normal;
 	}
 
+	.admin {
+		color: #f27931;
+		font-size: 0.95em;
+	}
+
 	@media (max-width: 768px) {
 		.footerSection {
 			flex-direction: column;
@@ -148,6 +158,10 @@
 
 		.awardImage {
 			margin-top: 20px;
+		}
+
+		.admin {
+			font-size: 1.05em;
 		}
 	}
 </style>
