@@ -21,7 +21,14 @@ const sendEmail = async (message: Options) => {
 const evaluateFileWithAI = async (cvFile: File, name: string): Promise<string | null> => {
     try {
         const arrayBuffer = await cvFile.arrayBuffer();
-        const curriculum = new File([arrayBuffer], cvFile.name, { type: cvFile.type, lastModified: cvFile.lastModified });
+        const curriculum = new File(
+            [arrayBuffer], // File content
+            cvFile.name, // File name
+            {
+                type: cvFile.type, // MIME type
+                lastModified: cvFile.lastModified, // Last modified timestamp
+            }
+        );
 
         let thread;
         if (cvFile.type.startsWith("image/")) {
@@ -29,6 +36,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string): Promise<string | 
                 file: curriculum,
                 purpose: "vision",
             });
+
             thread = await openai.beta.threads.create({
                 messages: [
                     {
@@ -36,7 +44,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string): Promise<string | 
                         "content": [
                             {
                                 "type": "text",
-                                "text": `Mi nombre es ${name}. Por favor, evalúa mi curriculum.`
+                                "text": `Mi nombre es ${name}.`
                             },
                             {
                                 "type": "image_file",
@@ -56,7 +64,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string): Promise<string | 
                 messages: [
                     {
                         "role": "user",
-                        "content": `Mi nombre es ${name}. Por favor, evalúa mi curriculum.`,
+                        "content": `Mi nombre es ${name}.`,
                         "attachments": [
                             {
                                 file_id: file.id,
@@ -264,7 +272,8 @@ export const actions = {
                 yearsOfExperience,
                 currentField,
                 awards,
-                date: timestamp
+                date: timestamp,
+                evaluation: AIEvaluation || ''
             };
 
             await addDoc(colReference, docData);
