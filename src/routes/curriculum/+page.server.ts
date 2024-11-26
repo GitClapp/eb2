@@ -78,7 +78,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string): Promise<string | 
 
         const run = await openai.beta.threads.runs.createAndPoll(
             thread.id,
-            { assistant_id: "asst_PDMHHn6ZRThkMWwBXd8k7HXF" }
+            { assistant_id: "asst_uaxC7bMjMKTAvMITFywk2gRK" }
         );
 
         if (run.status === 'completed') {
@@ -150,7 +150,18 @@ export const actions = {
             const email = formData.get("email");
             const phone = formData.get("phone");
             const linkedin = formData.get("linkedin");
-            const cvFile = formData.get("cv") as File | null;
+            let cvFile = formData.get("cv") as File | null;
+
+            if (cvFile) {
+                // Cambiar el nombre del archivo a "cv" manteniendo su extensión original
+                const newFileName = `cv.${cvFile.name.split('.').pop()}`;
+
+                // Crear un nuevo objeto File con el nombre actualizado
+                cvFile = new File([await cvFile.arrayBuffer()], newFileName, {
+                    type: cvFile.type,
+                    lastModified: cvFile.lastModified,
+                });
+            }
 
             // Obtener el valor del checkbox
             const noCV = formData.get("noCV") === "on";
