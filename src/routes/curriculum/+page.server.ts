@@ -154,7 +154,7 @@ export const actions = {
 
             if (cvFile) {
                 // Cambiar el nombre del archivo a "cv" manteniendo su extensión original
-                const newFileName = `cv.${cvFile.name.split('.').pop()}`;
+                const newFileName = `resume.${cvFile.name.split('.').pop()}`;
 
                 // Crear un nuevo objeto File con el nombre actualizado
                 cvFile = new File([await cvFile.arrayBuffer()], newFileName, {
