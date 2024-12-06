@@ -152,7 +152,7 @@ export const actions = {
             const linkedin = formData.get("linkedin");
             let cvFile = formData.get("cv") as File | null;
 
-            if (cvFile) {
+            if (cvFile?.name) {
                 // Cambiar el nombre del archivo a "cv" manteniendo su extensión original
                 const newFileName = `resume.${cvFile.name.split('.').pop()}`;
 
