@@ -277,7 +277,7 @@
 				</div>
 			{/if}
 
-			<Separator width="100%" margin="3rem 0" color="#fff" height="1px" />
+			<Separator width="100%" margin="2em 0" color="#fff" height="1px" />
 
 			<button type="submit" class="submitButton" disabled={isSubmitting}>
 				{#if isSubmitting}
@@ -331,6 +331,7 @@
 			padding: 50px 10em;
 		}
 	}
+
 	@media screen and (max-width: 750px) {
 		.mainForm {
 			padding: 30px;
@@ -477,7 +478,7 @@
 		padding: 14px;
 		background-color: #d32f2f;
 		color: #fff;
-		font-size: 0.85em;
+		font-size: max(14px, 0.85em);
 		font-weight: bold;
 		border: none;
 		border-radius: 8px;
