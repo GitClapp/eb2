@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
+	import { fade, slide } from 'svelte/transition';
 
-	import MainForm from './sections/mainForm.svelte';
 	import Associations from './sections/associations.svelte';
 	import Bio from './sections/bio.svelte';
 	import Why from './sections/why.svelte';
@@ -10,10 +9,286 @@
 	import Testimonials from './sections/testimonials.svelte';
 	import Reviews from './sections/reviews.svelte';
 	import Requisites from './sections/requisites.svelte';
+
+	import { goto } from '$app/navigation';
+	import toast from 'svelte-french-toast';
+	import PhoneInput from './components/phoneInput.svelte';
+	import { baseImageRoute, baseRoute, email, fullName, phone, ready } from './stores';
+	import { browser } from '$app/environment';
+	import Separator from './components/separator.svelte';
+
+	let valid: boolean;
+
+	let fileInput: HTMLInputElement;
+	let fileName: string;
+	let cvLabel: HTMLLabelElement;
+	let linkedinURL = '';
+
+	export let form: HTMLFormElement;
+	$: form, feedbackMessage();
+
+	let isSubmitting = false;
+
+	// Function to update the label when a file is selected
+	function updateLabel() {
+		if (fileInput && fileInput.files?.length && fileInput.files?.length > 0) {
+			const file = fileInput.files[0];
+			fileName = file.name;
+			const fileSize = (file.size / 1024).toFixed(2); // File size in KB
+			if (cvLabel) {
+				cvLabel.textContent = `${fileName} (${fileSize} KB)`;
+			}
+		}
+	}
+
+	// After the component is mounted, set up event listeners
+	$: if (fileInput) {
+		fileInput.addEventListener('change', updateLabel);
+	}
+
+	function deleteFile() {
+		if (fileInput) {
+			fileInput.value = ''; // Clear the file input
+			fileName = '';
+			if (cvLabel) {
+				cvLabel.textContent = 'Haz clic aquí para seleccionar un archivo'; // Reset the label text
+			}
+		}
+	}
+
+	function feedbackMessage() {
+		$ready = true;
+		if (form?.success) {
+			deleteFile();
+			toast.success('Solicitud enviada correctamente.', { style: 'font-size: 1.2em;' });
+			if (browser) {
+				goto(`${baseRoute}/exito`);
+			}
+		} else if (form?.error && isSubmitting) {
+			toast.error('La solicitud no ha podido ser enviada. Intenta más tarde.', {
+				style: 'font-size: 1.2em;',
+			});
+		}
+
+		isSubmitting = false;
+	}
+
+	let noCurriculum: boolean = false;
+
+	$: {
+		if (noCurriculum) {
+			// Reset the CV file input
+			deleteFile();
+		}
+	}
+
+	function submitForm(target: EventTarget) {
+		(target as HTMLFormElement).submit(); // Submit the form
+	}
 </script>
 
 <div in:fade class="eb2">
-	<MainForm />
+	<div class="mainForm" style="background-image: url('{baseImageRoute}/landing.jpg');">
+		<!-- Logo -->
+		<img src="{baseImageRoute}/logo.avif" alt="Logo" class="logo" />
+
+		<!-- Main Text Section -->
+		<div class="mainText">
+			<h1>¿ERES UN PROFESIONAL TALENTOSO Y CALIFICADO?</h1>
+			<h2>¡Alcanza tu sueño de vivir y trabajar en Estados Unidos con la VISA EB-2 NIW!</h2>
+			<p>
+				Solicita tu evaluación gratuita en línea y descubre si la VISA EB-2 NIW es la opción
+				ideal para ti.
+			</p>
+			<ul>
+				<li>No se requiere patrocinador.</li>
+				<li>Posibilidad de traer a tu familia contigo.</li>
+				<li>Proceso de solicitud rápido y sencillo.*</li>
+				<li>Permite la residencia permanente en Estados Unidos.</li>
+				<li>Sin gran inversión económica.</li>
+			</ul>
+		</div>
+
+		<!-- Form Section -->
+		<form
+			method="post"
+			enctype="multipart/form-data"
+			on:submit|preventDefault={(event) => {
+				$fullName = $fullName?.trim();
+				$email = $email?.trim();
+
+				if (!valid && $phone && $phone.length > 0) {
+					toast.error('El número telefónico no es válido', {
+						style: 'font-size: 1.2em;',
+					});
+				} else if (
+					(!fileInput || !fileInput.files?.length) &&
+					!linkedinURL.trim() &&
+					!noCurriculum
+				) {
+					toast.error('Por favor, ingresa un archivo CV o una URL de Linkedin.', {
+						style: 'font-size: 1.2em;',
+					});
+				} else {
+					toast('Esto puede tomar un momento. Por favor, sé paciente.', {
+						style: 'font-size: 1.2em;',
+					});
+					isSubmitting = true;
+					$ready = false;
+					if (event.target) {
+						submitForm(event.target);
+					}
+				}
+			}}
+		>
+			<div class="previousInfo hide">
+				<input type="tel" bind:value={$phone} placeholder="Teléfono" name="phone" />
+			</div>
+
+			<label for="fullName">Nombre Completo:</label>
+			<input
+				required
+				name="fullName"
+				id="fullName"
+				type="text"
+				bind:value={$fullName}
+				placeholder="Ingresa tu nombre completo"
+			/>
+
+			<label for="email">Correo Electrónico:</label>
+			<input
+				required
+				name="email"
+				id="email"
+				type="email"
+				bind:value={$email}
+				placeholder="Ingresa tu correo electrónico"
+			/>
+
+			<label for="phone">Teléfono:</label>
+			<PhoneInput bind:value={$phone} bind:valid required={false} />
+
+			{#if !noCurriculum}
+				<div style="display: inherit;" transition:slide>
+					<!-- Linkedin -->
+					<label for="linkedin">Enlace de perfil de Linkedin:</label>
+					<input
+						type="url"
+						id="linkedin"
+						name="linkedin"
+						bind:value={linkedinURL}
+						placeholder="Ingresa tu URL de LinkedIn"
+					/>
+
+					<!-- CV -->
+					<label for="cv">Currículum:</label>
+					<label
+						bind:this={cvLabel}
+						style="color: {fileName ? '#1e202b' : ''};"
+						id="cv-label"
+						for="cv"
+					>
+						<span> Haz clic aquí para seleccionar un archivo...</span>
+					</label>
+					{#if fileName}
+						<button on:click={deleteFile} class="deleteFile"
+							><ion-icon name="close-outline" /></button
+						>
+					{/if}
+					<input
+						bind:this={fileInput}
+						type="file"
+						id="cv"
+						accept=".doc,.docx,.pdf,.jpg,.png"
+						style="display: none;"
+						name="cv"
+					/>
+				</div>
+			{/if}
+
+			<!-- Checkbox - No CV -->
+			<div class="checkbox-container">
+				<label for="noCV">¿No tienes un currículum?</label>
+				<input type="checkbox" name="noCV" id="noCV" bind:checked={noCurriculum} />
+			</div>
+
+			{#if noCurriculum}
+				<div
+					class="noCurriculum"
+					transition:slide
+					style="padding-top: 1rem; margin-bottom: -1rem;"
+				>
+					<Separator width="100%" margin="0 0 2rem" color="#fff" height="1px" />
+
+					<!-- Nivel Académico -->
+					<label for="academicLevel">Nivel Académico:</label>
+					<select id="academicLevel" name="academicLevel" required>
+						<option value="" disabled selected>Selecciona tu nivel académico</option>
+						<option>Doctorado (PhD)</option>
+						<option>Maestría</option>
+						<option>Postgrado / Especialización</option>
+						<option>Licenciatura (Grado Universitario de 4 años)</option>
+						<option>Técnico Superior Universitario (TSU)</option>
+						<option>Bachillerato / Preparatoria</option>
+						<option>Carrera Universitaria Incompleta</option>
+					</select>
+
+					<!-- Años de Experiencia Profesional -->
+					<label for="yearsOfExperience">Años de Experiencia Profesional:</label>
+					<select id="yearsOfExperience" name="yearsOfExperience" required>
+						<option value="" disabled selected
+							>Selecciona tus años de experiencia</option
+						>
+						<option>Menos de 5 años</option>
+						<option>5-10 años</option>
+						<option>11-15 años</option>
+						<option>16-20 años</option>
+						<option>Más de 20 años</option>
+					</select>
+
+					<!-- Área o Campo Profesional Actual -->
+					<label for="currentField">Área o Campo Profesional Actual:</label>
+					<select id="currentField" name="currentField" required>
+						<option value="" disabled selected>Selecciona tu área profesional</option>
+						<option>Ciencias de la Salud (Médico, Enfermería, Biotecnología)</option>
+						<option
+							>Ingeniería y Tecnología (Ingeniería Civil, Eléctrica, Informática)</option
+						>
+						<option>Ciencias Exactas (Matemáticas, Física, Química)</option>
+						<option>Negocios y Finanzas (Administración, Contaduría, Economía)</option>
+						<option>Derecho y Ciencias Políticas</option>
+						<option>Educación y Formación</option>
+						<option>Agricultura y Recursos Naturales</option>
+						<option>Tecnología de la Información (TI) y Ciberseguridad</option>
+						<option>Logística y Cadena de Suministro</option>
+					</select>
+
+					<!-- Reconocimiento o Premio Profesional -->
+					<label for="awards"
+						>¿Has recibido algún reconocimiento o premio profesional en tu campo?</label
+					>
+					<select id="awards" name="awards" required>
+						<option value="" disabled selected>Selecciona una opción</option>
+						<option>Sí, a nivel nacional o internacional</option>
+						<option>Sí, a nivel local o dentro de la empresa</option>
+						<option>No, pero he tenido logros significativos en mi trabajo</option>
+						<option>No</option>
+					</select>
+				</div>
+			{/if}
+
+			<Separator width="100%" margin="3rem 0" color="#fff" height="1px" />
+
+			<button type="submit" class="submitButton" disabled={isSubmitting}>
+				{#if isSubmitting}
+					Enviando...
+				{:else}
+					Quiero una evaluación gratuita
+				{/if}
+			</button>
+		</form>
+	</div>
+
 	<Associations />
 	<Bio />
 	<Why />
@@ -38,5 +313,191 @@
 
 		width: 100%;
 		height: 100%;
+	}
+
+	.mainForm {
+		position: relative;
+		background-size: cover;
+		background-position: center;
+		padding: 5rem 50px;
+		color: white;
+		display: flex;
+		flex-direction: column;
+		font-size: 1.5rem;
+	}
+
+	@media screen and (min-width: 1500px) {
+		.mainForm {
+			padding: 50px 10em;
+		}
+	}
+	@media screen and (max-width: 750px) {
+		.mainForm {
+			padding: 30px;
+			padding-bottom: 50px;
+			font-size: 1rem;
+
+			background-color: #1e202b;
+			background-image: none !important;
+		}
+	}
+
+	.logo {
+		width: 7em;
+		margin-bottom: 2em;
+	}
+
+	.mainText {
+		max-width: 600px;
+		margin-bottom: 1rem;
+	}
+
+	h1,
+	h2 {
+		margin: 0 0 1rem;
+	}
+
+	h1 {
+		font-weight: 700;
+	}
+
+	h2 {
+		font-weight: 500;
+	}
+
+	p,
+	ul {
+		font-weight: 300;
+		font-size: 0.9em;
+		line-height: 1.5;
+	}
+
+	ul {
+		list-style-type: none;
+		padding: 0;
+		margin: 20px 0;
+	}
+
+	ul li::before {
+		content: '✔';
+		color: green;
+		margin-right: 10px;
+	}
+
+	form {
+		display: grid;
+		max-width: 550px;
+		color: #1e202b;
+	}
+
+	label {
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+		font-size: max(14px, 0.8em);
+		color: white;
+	}
+
+	input:not([type='checkbox']),
+	select,
+	#cv-label {
+		border: 1px solid #ccc;
+		border-radius: 30px;
+		background-color: white;
+		font-size: max(16px, 0.85em);
+		width: 100%;
+		max-width: calc(100vw - 3rem);
+		padding: 0.5em 1em;
+		margin-bottom: 1rem;
+	}
+
+	select {
+		margin-top: 0.5rem;
+	}
+
+	#cv-label,
+	select:invalid {
+		color: #707072;
+		font-weight: normal;
+	}
+
+	.checkbox-container {
+		width: 100%;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 1ch;
+		align-items: center;
+	}
+
+	.checkbox-container input[type='checkbox'] {
+		width: 18px;
+		height: 18px;
+		border: 2px solid #fff;
+		border-radius: 4px;
+		background-color: #122b4a;
+		cursor: pointer;
+		transform: translateY(-10%);
+	}
+
+	.checkbox-container input[type='checkbox']:hover {
+		background-color: #103058;
+	}
+
+	.checkbox-container input[type='checkbox']:checked {
+		background-color: #ff6d00;
+		border-color: #ff6d00;
+	}
+
+	/* Delete file button */
+	.deleteFile {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+
+		width: fit-content;
+		height: fit-content;
+
+		background-color: rgba(228, 9, 9, 0.8);
+		color: white;
+		border-radius: 50%;
+		aspect-ratio: 1 / 1;
+
+		margin-top: -2em;
+		margin-left: auto;
+		transform: translate(-0.5em, -30%);
+
+		font-size: 1em;
+
+		cursor: pointer;
+		z-index: 1;
+	}
+
+	/* Submit button styling */
+	.submitButton {
+		width: 100%;
+		padding: 14px;
+		background-color: #d32f2f;
+		color: #fff;
+		font-size: 0.85em;
+		font-weight: bold;
+		border: none;
+		border-radius: 8px;
+		cursor: pointer;
+	}
+
+	.submitButton:hover {
+		background-color: #d10a0a;
+	}
+
+	@media screen and (max-width: 750px) {
+		.deleteFile {
+			transform: translate(-0.5em, -55%);
+		}
+
+		input:not([type='checkbox']),
+		select,
+		#cv-label {
+			padding: 0.5em 0.75em;
+			border-radius: 10px;
+		}
 	}
 </style>

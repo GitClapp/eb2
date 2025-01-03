@@ -116,7 +116,7 @@ const evaluateProfileWithAI = async (message: string): Promise<string | null> =>
 
         const run = await openai.beta.threads.runs.createAndPoll(
             thread.id,
-            { assistant_id: "asst_PDMHHn6ZRThkMWwBXd8k7HXF" }
+            { assistant_id: "asst_uaxC7bMjMKTAvMITFywk2gRK" }
         );
 
         if (run.status === 'completed') {

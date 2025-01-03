@@ -18,7 +18,7 @@
 	export let disabled = false;
 	export let detailedValue: DetailedValue | null = null;
 	export let value: E164Number | null;
-	export let searchPlaceholder: string | null = 'Buscar';
+	export let searchPlaceholder: string | null = 'Buscar...';
 	export let selectedCountry: CountryCode | null = 'US';
 	export let valid: boolean = true;
 	export let required: boolean = true;
@@ -227,8 +227,9 @@
 		border: 1px solid #ccc;
 		border-radius: 30px;
 		background-color: white;
-		font-size: 0.9em;
+		font-size: max(16px, 0.85em);
 		max-width: calc(100vw - 3rem);
+		margin-bottom: 1rem;
 	}
 
 	.invalid {
@@ -251,16 +252,9 @@
 		display: flex;
 		gap: 2px;
 		align-items: center;
-		padding: 0.75rem 0.25rem;
+		padding: 0.75rem 0.5rem;
 		padding-left: 1.25rem;
 		cursor: pointer;
-	}
-
-	@media screen and (max-width: 768px) {
-		.selectedCountryButton {
-			padding: 0.35rem 0.25rem;
-			padding-left: 1rem;
-		}
 	}
 
 	.selectedCode {
@@ -283,13 +277,18 @@
 	/* TelInput styling to look cohesive with the country selection */
 	.telInput {
 		flex: 1;
-		padding: 12px;
+		padding: 0.5em 1em;
+		padding-left: 0.75rem;
 		border: none;
 		color: #333;
 
 		display: grid;
 		justify-content: stretch;
 		width: fit-content;
+	}
+
+	:global(.telInput input) {
+		width: 100%;
 	}
 
 	/* Dropdown styles for country selection */
@@ -302,15 +301,17 @@
 		border-radius: 30px;
 		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 		background-color: white;
-		max-height: 200px;
+		max-height: 250px;
 		overflow-y: auto;
 		z-index: 10;
 	}
 
 	.search {
 		margin-top: 0.5rem;
-		padding: 0.5rem 1rem;
-		width: 100%;
+		padding: 0.75rem 0;
+		margin: 0rem 1rem 0.5rem;
+		width: calc(100% - 2rem);
+		border-bottom: #333 solid 1px;
 	}
 
 	.countryOption {
@@ -343,5 +344,26 @@
 	.activeOption {
 		background-color: #f0f0f0;
 		color: var(--content-7);
+	}
+
+	@media screen and (max-width: 750px) {
+		.outer,
+		#dropdown-countries {
+			border-radius: 10px;
+		}
+
+		.countryControl {
+			border-top-left-radius: 10px;
+			border-bottom-left-radius: 10px;
+		}
+
+		.telInput {
+			padding: 0.5em 0.5em;
+		}
+
+		.selectedCountryButton {
+			padding: 0.5em 0.25em;
+			padding-left: 1rem;
+		}
 	}
 </style>
