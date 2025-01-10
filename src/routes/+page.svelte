@@ -29,6 +29,11 @@
 
 	let isSubmitting = false;
 
+	let academicLevel: string = '';
+	let yearsOfExperience: string = '';
+	let currentField: string = '';
+	let awards: string = '';
+
 	// Function to update the label when a file is selected
 	function updateLabel() {
 		if (fileInput && fileInput.files?.length && fileInput.files?.length > 0) {
@@ -73,15 +78,6 @@
 		isSubmitting = false;
 	}
 
-	let noCurriculum: boolean = false;
-
-	$: {
-		if (noCurriculum) {
-			// Reset the CV file input
-			deleteFile();
-		}
-	}
-
 	function submitForm(target: EventTarget) {
 		(target as HTMLFormElement).submit(); // Submit the form
 	}
@@ -96,17 +92,6 @@
 		<div class="mainText">
 			<h1>¿ERES UN PROFESIONAL TALENTOSO Y CALIFICADO?</h1>
 			<h2>¡Alcanza tu sueño de vivir y trabajar en Estados Unidos con la VISA EB-2 NIW!</h2>
-			<p>
-				Solicita tu evaluación gratuita en línea y descubre si la VISA EB-2 NIW es la opción
-				ideal para ti.
-			</p>
-			<ul>
-				<li>No se requiere patrocinador.</li>
-				<li>Posibilidad de traer a tu familia contigo.</li>
-				<li>Proceso de solicitud rápido y sencillo.*</li>
-				<li>Permite la residencia permanente en Estados Unidos.</li>
-				<li>Sin gran inversión económica.</li>
-			</ul>
 		</div>
 
 		<!-- Form Section -->
@@ -123,12 +108,14 @@
 					});
 				} else if (
 					(!fileInput || !fileInput.files?.length) &&
-					!linkedinURL.trim() &&
-					!noCurriculum
+					(!academicLevel || !yearsOfExperience || !currentField || !awards)
 				) {
-					toast.error('Por favor, ingresa un archivo CV o una URL de Linkedin.', {
-						style: 'font-size: 1.2em;',
-					});
+					toast.error(
+						'Por favor, ingresa un archivo CV o completa los campos de opción múltiple.',
+						{
+							style: 'font-size: 1.2em;',
+						},
+					);
 				} else {
 					toast('Esto puede tomar un momento. Por favor, sé paciente.', {
 						style: 'font-size: 1.2em;',
@@ -168,116 +155,124 @@
 			<label for="phone">Teléfono:</label>
 			<PhoneInput bind:value={$phone} bind:valid required={false} />
 
-			{#if !noCurriculum}
-				<div style="display: inherit;" transition:slide>
-					<!-- Linkedin -->
-					<label for="linkedin">Enlace de perfil de Linkedin:</label>
-					<input
-						type="url"
-						id="linkedin"
-						name="linkedin"
-						bind:value={linkedinURL}
-						placeholder="Ingresa tu URL de LinkedIn"
-					/>
-
-					<!-- CV -->
-					<label for="cv">Currículum:</label>
-					<label
-						bind:this={cvLabel}
-						style="color: {fileName ? '#1e202b' : ''};"
-						id="cv-label"
-						for="cv"
+			<div style="display: inherit;" transition:slide>
+				<!-- CV -->
+				<label for="cv">Currículum:</label>
+				<label
+					bind:this={cvLabel}
+					style="color: {fileName ? '#1e202b' : ''};"
+					id="cv-label"
+					for="cv"
+				>
+					<span> Haz clic aquí para seleccionar un archivo...</span>
+				</label>
+				{#if fileName}
+					<button on:click={deleteFile} class="deleteFile"
+						><ion-icon name="close-outline" /></button
 					>
-						<span> Haz clic aquí para seleccionar un archivo...</span>
-					</label>
-					{#if fileName}
-						<button on:click={deleteFile} class="deleteFile"
-							><ion-icon name="close-outline" /></button
-						>
-					{/if}
-					<input
-						bind:this={fileInput}
-						type="file"
-						id="cv"
-						accept=".doc,.docx,.pdf,.jpg,.png"
-						style="display: none;"
-						name="cv"
-					/>
-				</div>
-			{/if}
-
-			<!-- Checkbox - No CV -->
-			<div class="checkbox-container">
-				<label for="noCV">¿No tienes un currículum?</label>
-				<input type="checkbox" name="noCV" id="noCV" bind:checked={noCurriculum} />
+				{/if}
+				<input
+					bind:this={fileInput}
+					type="file"
+					id="cv"
+					accept=".doc,.docx,.pdf,.jpg,.png"
+					style="display: none;"
+					name="cv"
+				/>
 			</div>
 
-			{#if noCurriculum}
-				<div
-					class="noCurriculum"
-					transition:slide
-					style="padding-top: 1rem; margin-bottom: -1rem;"
+			<div
+				class="noCurriculum"
+				transition:slide
+				style="padding-top: 1rem; margin-bottom: -1rem;"
+			>
+				<Separator width="100%" margin="0 0 2rem" color="#fff" height="1px" />
+
+				<!-- Nivel Académico -->
+				<label for="academicLevel">Nivel Académico:</label>
+				<select
+					style="color: {academicLevel ? 'inherit' : '#707072'}"
+					id="academicLevel"
+					name="academicLevel"
+					bind:value={academicLevel}
 				>
-					<Separator width="100%" margin="0 0 2rem" color="#fff" height="1px" />
+					<option value="" disabled selected>Selecciona tu nivel académico</option>
+					<option>Doctorado (PhD)</option>
+					<option>Maestría</option>
+					<option>Postgrado / Especialización</option>
+					<option>Licenciatura (Grado Universitario de 4 años)</option>
+					<option>Técnico Superior Universitario (TSU)</option>
+					<option>Bachillerato / Preparatoria</option>
+					<option>Carrera Universitaria Incompleta</option>
+				</select>
 
-					<!-- Nivel Académico -->
-					<label for="academicLevel">Nivel Académico:</label>
-					<select id="academicLevel" name="academicLevel" required>
-						<option value="" disabled selected>Selecciona tu nivel académico</option>
-						<option>Doctorado (PhD)</option>
-						<option>Maestría</option>
-						<option>Postgrado / Especialización</option>
-						<option>Licenciatura (Grado Universitario de 4 años)</option>
-						<option>Técnico Superior Universitario (TSU)</option>
-						<option>Bachillerato / Preparatoria</option>
-						<option>Carrera Universitaria Incompleta</option>
-					</select>
+				<!-- Años de Experiencia Profesional -->
+				<label for="yearsOfExperience">Años de Experiencia Profesional:</label>
+				<select
+					style="color: {yearsOfExperience ? 'inherit' : '#707072'}"
+					id="yearsOfExperience"
+					name="yearsOfExperience"
+					bind:value={yearsOfExperience}
+				>
+					<option value="" disabled selected>Selecciona tus años de experiencia</option>
+					<option>Menos de 5 años</option>
+					<option>5-10 años</option>
+					<option>11-15 años</option>
+					<option>16-20 años</option>
+					<option>Más de 20 años</option>
+				</select>
 
-					<!-- Años de Experiencia Profesional -->
-					<label for="yearsOfExperience">Años de Experiencia Profesional:</label>
-					<select id="yearsOfExperience" name="yearsOfExperience" required>
-						<option value="" disabled selected
-							>Selecciona tus años de experiencia</option
-						>
-						<option>Menos de 5 años</option>
-						<option>5-10 años</option>
-						<option>11-15 años</option>
-						<option>16-20 años</option>
-						<option>Más de 20 años</option>
-					</select>
-
-					<!-- Área o Campo Profesional Actual -->
-					<label for="currentField">Área o Campo Profesional Actual:</label>
-					<select id="currentField" name="currentField" required>
-						<option value="" disabled selected>Selecciona tu área profesional</option>
-						<option>Ciencias de la Salud (Médico, Enfermería, Biotecnología)</option>
-						<option
-							>Ingeniería y Tecnología (Ingeniería Civil, Eléctrica, Informática)</option
-						>
-						<option>Ciencias Exactas (Matemáticas, Física, Química)</option>
-						<option>Negocios y Finanzas (Administración, Contaduría, Economía)</option>
-						<option>Derecho y Ciencias Políticas</option>
-						<option>Educación y Formación</option>
-						<option>Agricultura y Recursos Naturales</option>
-						<option>Tecnología de la Información (TI) y Ciberseguridad</option>
-						<option>Logística y Cadena de Suministro</option>
-					</select>
-
-					<!-- Reconocimiento o Premio Profesional -->
-					<label for="awards"
-						>¿Has recibido algún reconocimiento o premio profesional en tu campo?</label
+				<!-- Área o Campo Profesional Actual -->
+				<label for="currentField">Área o Campo Profesional Actual:</label>
+				<select
+					style="color: {currentField ? 'inherit' : '#707072'}"
+					id="currentField"
+					name="currentField"
+					bind:value={currentField}
+				>
+					<option value="" disabled selected>Selecciona tu área profesional</option>
+					<option>Ciencias de la Salud (Médico, Enfermería, Biotecnología)</option>
+					<option
+						>Ingeniería y Tecnología (Ingeniería Civil, Eléctrica, Informática)</option
 					>
-					<select id="awards" name="awards" required>
-						<option value="" disabled selected>Selecciona una opción</option>
-						<option>Sí, a nivel nacional o internacional</option>
-						<option>Sí, a nivel local o dentro de la empresa</option>
-						<option>No, pero he tenido logros significativos en mi trabajo</option>
-						<option>No</option>
-					</select>
-				</div>
-			{/if}
+					<option>Ciencias Exactas (Matemáticas, Física, Química)</option>
+					<option>Negocios y Finanzas (Administración, Contaduría, Economía)</option>
+					<option>Derecho y Ciencias Políticas</option>
+					<option>Educación y Formación</option>
+					<option>Agricultura y Recursos Naturales</option>
+					<option>Tecnología de la Información (TI) y Ciberseguridad</option>
+					<option>Logística y Cadena de Suministro</option>
+				</select>
 
-			<Separator width="100%" margin="2em 0" color="#fff" height="1px" />
+				<!-- Reconocimiento o Premio Profesional -->
+				<label for="awards"
+					>¿Has recibido algún reconocimiento o premio profesional en tu campo?</label
+				>
+				<select
+					style="color: {awards ? 'inherit' : '#707072'}"
+					id="awards"
+					name="awards"
+					bind:value={awards}
+				>
+					<option value="" disabled selected>Selecciona una opción</option>
+					<option>Sí, a nivel nacional o internacional</option>
+					<option>Sí, a nivel local o dentro de la empresa</option>
+					<option>No, pero he tenido logros significativos en mi trabajo</option>
+					<option>No</option>
+				</select>
+			</div>
+
+			<Separator width="100%" margin="2em 0 1.5em" color="#fff" height="1px" />
+
+			<!-- Linkedin -->
+			<label for="linkedin">Enlace de perfil de Linkedin (opcional):</label>
+			<input
+				type="url"
+				id="linkedin"
+				name="linkedin"
+				bind:value={linkedinURL}
+				placeholder="Ingresa tu URL de LinkedIn"
+			/>
 
 			<button type="submit" class="submitButton" disabled={isSubmitting}>
 				{#if isSubmitting}
@@ -288,15 +283,6 @@
 			</button>
 		</form>
 	</div>
-
-	<Associations />
-	<Bio />
-	<Why />
-	<Statistics />
-	<How />
-	<Testimonials />
-	<Reviews />
-	<Requisites />
 </div>
 
 <svelte:head>
@@ -319,7 +305,7 @@
 		position: relative;
 		background-size: cover;
 		background-position: center;
-		padding: 5rem 50px;
+		padding: 5rem 50px 6rem;
 		color: white;
 		display: flex;
 		flex-direction: column;
@@ -366,25 +352,6 @@
 		font-weight: 500;
 	}
 
-	p,
-	ul {
-		font-weight: 300;
-		font-size: 0.9em;
-		line-height: 1.5;
-	}
-
-	ul {
-		list-style-type: none;
-		padding: 0;
-		margin: 20px 0;
-	}
-
-	ul li::before {
-		content: '✔';
-		color: green;
-		margin-right: 10px;
-	}
-
 	form {
 		display: grid;
 		max-width: 550px;
@@ -402,7 +369,7 @@
 	select,
 	#cv-label {
 		border: 1px solid #ccc;
-		border-radius: 30px;
+		border-radius: 30px !important;
 		background-color: white;
 		font-size: max(16px, 0.85em);
 		width: 100%;
@@ -416,36 +383,9 @@
 	}
 
 	#cv-label,
-	select:invalid {
+	select {
 		color: #707072;
 		font-weight: normal;
-	}
-
-	.checkbox-container {
-		width: 100%;
-		display: grid;
-		grid-template-columns: auto 1fr;
-		gap: 1ch;
-		align-items: center;
-	}
-
-	.checkbox-container input[type='checkbox'] {
-		width: 18px;
-		height: 18px;
-		border: 2px solid #fff;
-		border-radius: 4px;
-		background-color: #122b4a;
-		cursor: pointer;
-		transform: translateY(-10%);
-	}
-
-	.checkbox-container input[type='checkbox']:hover {
-		background-color: #103058;
-	}
-
-	.checkbox-container input[type='checkbox']:checked {
-		background-color: #ff6d00;
-		border-color: #ff6d00;
 	}
 
 	/* Delete file button */
@@ -475,14 +415,15 @@
 	/* Submit button styling */
 	.submitButton {
 		width: 100%;
-		padding: 14px;
+		padding: 0.75em 1em;
 		background-color: #d32f2f;
 		color: #fff;
 		font-size: max(14px, 0.85em);
 		font-weight: bold;
 		border: none;
-		border-radius: 8px;
+		border-radius: 30px;
 		cursor: pointer;
+		margin-top: 1.5em;
 	}
 
 	.submitButton:hover {
@@ -498,6 +439,10 @@
 		select,
 		#cv-label {
 			padding: 0.5em 0.75em;
+			border-radius: 10px !important;
+		}
+
+		.submitButton {
 			border-radius: 10px;
 		}
 	}

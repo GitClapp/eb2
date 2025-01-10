@@ -18,7 +18,7 @@ const sendEmail = async (message: Options) => {
     });
 };
 
-const evaluateFileWithAI = async (cvFile: File, name: string): Promise<string | null> => {
+const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: string): Promise<string | null> => {
     try {
         const arrayBuffer = await cvFile.arrayBuffer();
         const curriculum = new File(
@@ -44,7 +44,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string): Promise<string | 
                         "content": [
                             {
                                 "type": "text",
-                                "text": `Mi nombre es ${name}.`
+                                "text": fieldsInfo || `Mi nombre es ${name}.`
                             },
                             {
                                 "type": "image_file",
@@ -64,7 +64,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string): Promise<string | 
                 messages: [
                     {
                         "role": "user",
-                        "content": `Mi nombre es ${name}.`,
+                        "content": fieldsInfo || `Mi nombre es ${name}.`,
                         "attachments": [
                             {
                                 file_id: file.id,
@@ -103,13 +103,13 @@ const evaluateFileWithAI = async (cvFile: File, name: string): Promise<string | 
     }
 }
 
-const evaluateProfileWithAI = async (message: string): Promise<string | null> => {
+const evaluateProfileWithAI = async (fieldsInfo: string): Promise<string | null> => {
     try {
         const thread = await openai.beta.threads.create({
             messages: [
                 {
                     "role": "user",
-                    "content": message,
+                    "content": fieldsInfo,
                 }
             ]
         });
@@ -163,21 +163,17 @@ export const actions = {
                 });
             }
 
-            // Obtener el valor del checkbox
-            const noCV = formData.get("noCV") === "on";
+            // Obtener los valores de los campos select
+            const academicLevel = formData.get("academicLevel");
+            const yearsOfExperience = formData.get("yearsOfExperience");
+            const currentField = formData.get("currentField");
+            const awards = formData.get("awards");
 
-            // Solo obtener los valores de los campos select si el checkbox está marcado
-            let academicLevel = null, yearsOfExperience = null, currentField = null, awards = null;
-            if (noCV) {
-                academicLevel = formData.get("academicLevel");
-                yearsOfExperience = formData.get("yearsOfExperience");
-                currentField = formData.get("currentField");
-                awards = formData.get("awards");
-            }
+            let fieldsInfo = "";
 
-            if (!linkedin && (!cvFile || !cvFile?.name) && !noCV) {
+            if ((!cvFile || !cvFile?.name) && (!academicLevel || !yearsOfExperience || !currentField || !awards)) {
                 return {
-                    error: "There was an error sending the email.",
+                    error: "The is no cv file and the fields are not complete. Email has not been sent.",
                 };
             }
 
@@ -214,30 +210,33 @@ export const actions = {
                 }
             `;
 
-            // Si el checkbox está marcado, se añaden los campos adicionales al correo
-            if (noCV) {
+            // Si los campos adicionales están completos, se añaden al correo
+            if (academicLevel && yearsOfExperience && currentField && awards) {
                 html += `
                     <p style="font-size: inherit; margin: 30px 0 10px;"><strong>Nivel Académico:</strong> ${academicLevel}</p>
                     <p style="font-size: inherit; margin: 10px 0;"><strong>Años de Experiencia Profesional:</strong> ${yearsOfExperience}</p>
                     <p style="font-size: inherit; margin: 10px 0;"><strong>Área o Campo Profesional Actual:</strong> ${currentField}</p>
                     <p style="font-size: inherit; margin: 10px 0;"><strong>Reconocimientos o Premios:</strong> ${awards}</p>
                 `;
+
+                fieldsInfo = `
+                    Nombre Completo: ${fullName}
+                    Nivel Académico: ${academicLevel}
+                    Años de Experiencia Profesional: ${yearsOfExperience}
+                    Área o Campo Profesional Actual: ${currentField}
+                    Reconocimientos o Premios: ${awards}
+                `
             }
 
             html += `</div>`;
 
             // Obtener la evaluación de IA
             let AIEvaluation: string | null = null;
-            if (noCV) {
-                AIEvaluation = await evaluateProfileWithAI(`
-                        Nombre Completo: ${fullName}
-                        Nivel Académico: ${academicLevel}
-                        Años de Experiencia Profesional: ${yearsOfExperience}
-                        Área o Campo Profesional Actual: ${currentField}
-                        Reconocimientos o Premios: ${awards}
-                    `);
-            } else if (cvFile?.name) {
-                AIEvaluation = await evaluateFileWithAI(cvFile, fullName as string);
+            if (cvFile?.name) {
+                AIEvaluation = await evaluateFileWithAI(cvFile, fullName as string, fieldsInfo);
+            }
+            else {
+                AIEvaluation = await evaluateProfileWithAI(fieldsInfo);
             }
 
             // Agregar sección de "Evaluación Inicial" si AIEvaluation no es nulo
@@ -250,13 +249,9 @@ export const actions = {
                 `;
             }
 
-            const message = {
+            const message: Options = {
                 from: GOOGLE_EMAIL,
                 to: RECEIVER_EMAIL,
-                cc: [
-                    'ElianAlmonte@cantolegal.com',
-                ],
-                bcc: BCC_EMAIL,
                 subject: subject,
                 html: html,
                 attachments: cvAttachment
@@ -270,24 +265,30 @@ export const actions = {
                     : [],
             };
 
-            // Guardar la solicitud en la base de datos
-            const colReference = collection(db, 'solicitudes');
-            const timestamp = new Date();
+            // Send copies of the email and save the request if the receiver email doesn't have the devepment value
+            if (RECEIVER_EMAIL !== 'sntg.ovalde@gmail.com') {
+                message.cc = ['ElianAlmonte@cantolegal.com'];
+                message.bcc = BCC_EMAIL;
 
-            const docData = {
-                fullName,
-                email,
-                phone,
-                linkedin,
-                academicLevel,
-                yearsOfExperience,
-                currentField,
-                awards,
-                date: timestamp,
-                evaluation: AIEvaluation || ''
-            };
+                // Guardar la solicitud en la base de datos
+                const colReference = collection(db, 'solicitudes');
+                const timestamp = new Date();
 
-            await addDoc(colReference, docData);
+                const docData = {
+                    fullName,
+                    email,
+                    phone,
+                    linkedin,
+                    academicLevel,
+                    yearsOfExperience,
+                    currentField,
+                    awards,
+                    date: timestamp,
+                    evaluation: AIEvaluation || ''
+                };
+
+                await addDoc(colReference, docData);
+            }
 
             // Enviar el correo
             await sendEmail(message);
