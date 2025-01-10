@@ -1,15 +1,6 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
 
-	import Associations from './sections/associations.svelte';
-	import Bio from './sections/bio.svelte';
-	import Why from './sections/why.svelte';
-	import Statistics from './sections/statistics.svelte';
-	import How from './sections/how.svelte';
-	import Testimonials from './sections/testimonials.svelte';
-	import Reviews from './sections/reviews.svelte';
-	import Requisites from './sections/requisites.svelte';
-
 	import { goto } from '$app/navigation';
 	import toast from 'svelte-french-toast';
 	import PhoneInput from './components/phoneInput.svelte';

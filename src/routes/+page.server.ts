@@ -4,6 +4,8 @@ import { db } from "$lib/firebase/eb2.server";
 import { openai } from "$lib/openai/eb2.server";
 import { addDoc, collection } from 'firebase/firestore';
 import type { Options } from "nodemailer/lib/mailer";
+import { readPdfText } from 'pdf-text-reader';
+import { getTextExtractor } from 'office-text-extractor'
 
 const sendEmail = async (message: Options) => {
     await new Promise((resolve, reject) => {
@@ -31,6 +33,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
         );
 
         let thread;
+        let fileText = '';
         if (cvFile.type.startsWith("image/")) {
             const file = await openai.files.create({
                 file: curriculum,
@@ -44,7 +47,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
                         "content": [
                             {
                                 "type": "text",
-                                "text": fieldsInfo || `Mi nombre es ${name}.`
+                                "text": fieldsInfo || `Nombre del cliente: ${name}.`
                             },
                             {
                                 "type": "image_file",
@@ -60,11 +63,20 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
                 purpose: "assistants",
             });
 
+            if (cvFile.type === 'application/pdf') {
+                fileText = await readPdfText({ data: arrayBuffer });
+                console.log(fileText);
+            } else if (cvFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || cvFile.type === 'application/msword') {
+                const extractor = getTextExtractor();
+                fileText = await extractor.extractText({ input: Buffer.from(arrayBuffer), type: 'buffer' });
+                console.log(fileText);
+            }
+
             thread = await openai.beta.threads.create({
                 messages: [
                     {
                         "role": "user",
-                        "content": fieldsInfo || `Mi nombre es ${name}.`,
+                        "content": `${fieldsInfo || `Nombre del cliente: ${name}.`} ${fileText ? `Transcripción del currículum: ${fileText}` : ''}`,
                         "attachments": [
                             {
                                 file_id: file.id,
