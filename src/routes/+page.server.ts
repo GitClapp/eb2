@@ -47,7 +47,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
                         "content": [
                             {
                                 "type": "text",
-                                "text": fieldsInfo || `Nombre del cliente: ${name}.`
+                                "text": `Nombre del cliente: ${name}. ${fieldsInfo ? fieldsInfo : ''}`
                             },
                             {
                                 "type": "image_file",
@@ -72,17 +72,21 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
                 console.log(fileText);
             }
 
+            const messageContent = `${`Nombre del cliente: ${name}.`} ${fieldsInfo ? fieldsInfo : ''} ${fileText ? `Transcripción del currículum: ${fileText}` : ''}`;
+
             thread = await openai.beta.threads.create({
                 messages: [
                     {
                         "role": "user",
-                        "content": `${fieldsInfo || `Nombre del cliente: ${name}.`} ${fileText ? `Transcripción del currículum: ${fileText}` : ''}`,
-                        "attachments": [
-                            {
-                                file_id: file.id,
-                                tools: [{ type: "code_interpreter" }]
-                            }
-                        ]
+                        "content": messageContent,
+                        ...(fileText ? {} : {
+                            "attachments": [
+                                {
+                                    file_id: file.id,
+                                    tools: [{ type: "code_interpreter" }]
+                                }
+                            ]
+                        })
                     }
                 ]
             });

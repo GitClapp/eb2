@@ -123,7 +123,7 @@
 				<input type="tel" bind:value={$phone} placeholder="Teléfono" name="phone" />
 			</div>
 
-			<label for="fullName">Nombre Completo:</label>
+			<label for="fullName"><span style="color: #ff4444;">*</span> Nombre Completo:</label>
 			<input
 				required
 				name="fullName"
@@ -133,7 +133,7 @@
 				placeholder="Ingresa tu nombre completo"
 			/>
 
-			<label for="email">Correo Electrónico:</label>
+			<label for="email"><span style="color: #ff4444;">*</span> Correo Electrónico:</label>
 			<input
 				required
 				name="email"
