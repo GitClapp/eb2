@@ -143,8 +143,8 @@
 				placeholder="Ingresa tu correo electrónico"
 			/>
 
-			<label for="phone">Teléfono:</label>
-			<PhoneInput bind:value={$phone} bind:valid required={false} />
+			<label for="phone"><span style="color: #ff4444;">*</span> Teléfono:</label>
+			<PhoneInput bind:value={$phone} bind:valid required={true} />
 
 			<div
 				class="noCurriculum"
