@@ -146,32 +146,6 @@
 			<label for="phone">Teléfono:</label>
 			<PhoneInput bind:value={$phone} bind:valid required={false} />
 
-			<div style="display: inherit;" transition:slide>
-				<!-- CV -->
-				<label for="cv">Currículum:</label>
-				<label
-					bind:this={cvLabel}
-					style="color: {fileName ? '#1e202b' : ''};"
-					id="cv-label"
-					for="cv"
-				>
-					<span> Haz clic aquí para seleccionar un archivo...</span>
-				</label>
-				{#if fileName}
-					<button on:click={deleteFile} class="deleteFile"
-						><ion-icon name="close-outline" /></button
-					>
-				{/if}
-				<input
-					bind:this={fileInput}
-					type="file"
-					id="cv"
-					accept=".doc,.docx,.pdf,.jpg,.png"
-					style="display: none;"
-					name="cv"
-				/>
-			</div>
-
 			<div
 				class="noCurriculum"
 				transition:slide
@@ -254,6 +228,32 @@
 			</div>
 
 			<Separator width="100%" margin="2em 0 1.5em" color="#fff" height="1px" />
+
+			<div style="display: inherit;" transition:slide>
+				<!-- CV -->
+				<label for="cv">Currículum (opcional):</label>
+				<label
+					bind:this={cvLabel}
+					style="color: {fileName ? '#1e202b' : ''};"
+					id="cv-label"
+					for="cv"
+				>
+					<span> Haz clic aquí para seleccionar un archivo...</span>
+				</label>
+				{#if fileName}
+					<button on:click={deleteFile} class="deleteFile"
+						><ion-icon name="close-outline" /></button
+					>
+				{/if}
+				<input
+					bind:this={fileInput}
+					type="file"
+					id="cv"
+					accept=".doc,.docx,.pdf,.jpg,.png"
+					style="display: none;"
+					name="cv"
+				/>
+			</div>
 
 			<!-- Linkedin -->
 			<label for="linkedin">Enlace de perfil de Linkedin (opcional):</label>
