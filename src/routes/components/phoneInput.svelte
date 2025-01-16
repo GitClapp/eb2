@@ -57,24 +57,31 @@
 	};
 
 	const sortCountries = (countries: Country[], text: string) => {
-		const normalizedText = text.trim().toLowerCase();
+		const normalizedText = text.trim().toLowerCase().replace('+', '');
 		if (!normalizedText) {
 			return countries.sort((a, b) => a.label.localeCompare(b.label));
 		}
 		return countries.sort((a, b) => {
 			const aNameLower = a.name.toLowerCase();
 			const bNameLower = b.name.toLowerCase();
-			const aStartsWith = aNameLower.startsWith(normalizedText);
-			const bStartsWith = bNameLower.startsWith(normalizedText);
+			const aDialCode = String(a.dialCode).toLowerCase();
+			const bDialCode = String(b.dialCode).toLowerCase();
+			const aStartsWith =
+				aNameLower.startsWith(normalizedText) || aDialCode.startsWith(normalizedText);
+			const bStartsWith =
+				bNameLower.startsWith(normalizedText) || bDialCode.startsWith(normalizedText);
 			if (aStartsWith && !bStartsWith) return -1;
 			if (!aStartsWith && bStartsWith) return 1;
 			const aIndex = aNameLower.indexOf(normalizedText);
 			const bIndex = bNameLower.indexOf(normalizedText);
-			if (aIndex === -1 && bIndex === -1) return a.id.localeCompare(b.id);
-			if (aIndex === -1) return 1;
-			if (bIndex === -1) return -1;
-			const aWeight = aIndex + (aStartsWith ? 0 : 1);
-			const bWeight = bIndex + (bStartsWith ? 0 : 1);
+			const aDialIndex = aDialCode.indexOf(normalizedText);
+			const bDialIndex = bDialCode.indexOf(normalizedText);
+			if (aIndex === -1 && bIndex === -1 && aDialIndex === -1 && bDialIndex === -1)
+				return a.id.localeCompare(b.id);
+			if (aIndex === -1 && aDialIndex === -1) return 1;
+			if (bIndex === -1 && bDialIndex === -1) return -1;
+			const aWeight = Math.min(aIndex, aDialIndex) + (aStartsWith ? 0 : 1);
+			const bWeight = Math.min(bIndex, bDialIndex) + (bStartsWith ? 0 : 1);
 			return aWeight - bWeight;
 		});
 	};
