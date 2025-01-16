@@ -270,6 +270,7 @@ export const actions = {
                 to: RECEIVER_EMAIL,
                 subject: subject,
                 html: html,
+                replyTo: email ? String(email) : undefined,
                 attachments: cvAttachment
                     ? [
                         {
