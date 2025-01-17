@@ -4,7 +4,6 @@ import { db } from "$lib/firebase/eb2.server";
 import { openai } from "$lib/openai/eb2.server";
 import { addDoc, collection } from 'firebase/firestore';
 import type { Options } from "nodemailer/lib/mailer";
-import { readPdfText } from 'pdf-text-reader';
 import { getTextExtractor } from 'office-text-extractor'
 
 const sendEmail = async (message: Options) => {
@@ -63,14 +62,9 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
                 purpose: "assistants",
             });
 
-            if (cvFile.type === 'application/pdf') {
-                fileText = await readPdfText({ data: arrayBuffer });
-                console.log(fileText);
-            } else if (cvFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || cvFile.type === 'application/msword') {
-                const extractor = getTextExtractor();
-                fileText = await extractor.extractText({ input: Buffer.from(arrayBuffer), type: 'buffer' });
-                console.log(fileText);
-            }
+            const extractor = getTextExtractor();
+            fileText = await extractor.extractText({ input: Buffer.from(arrayBuffer), type: 'buffer' });
+            console.log(fileText);
 
             const messageContent = `${`Nombre del cliente: ${name}.`} ${fieldsInfo ? fieldsInfo : ''} ${fileText ? `Transcripción del currículum: ${fileText}` : ''}`;
 

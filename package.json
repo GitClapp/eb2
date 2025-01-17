@@ -38,7 +38,6 @@
 		"nodemailer": "^6.9.15",
 		"office-text-extractor": "^3.0.3",
 		"openai": "^4.71.0",
-		"pdf-text-reader": "^5.1.0",
 		"svelte-french-toast": "^1.0.3",
 		"svelte-tel-input": "^3.5.2",
 		"xlsx": "^0.18.5"
