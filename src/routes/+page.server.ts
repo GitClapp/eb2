@@ -169,8 +169,8 @@ export const actions = {
             let cvFile = formData.get("cv") as File | null;
 
             if (cvFile?.name) {
-                // Cambiar el nombre del archivo a "cv" manteniendo su extensión original
-                const newFileName = `resume.${cvFile.name.split('.').pop()}`;
+                // Cambiar el nombre del archivo al nombre completo sin espacios, manteniendo su extensión original
+                const newFileName = `${String(fullName).replace(/\s+/g, '')}.${cvFile.name.split('.').pop()}`;
 
                 // Crear un nuevo objeto File con el nombre actualizado
                 cvFile = new File([await cvFile.arrayBuffer()], newFileName, {
@@ -284,7 +284,6 @@ export const actions = {
 
             // Send copies of the email and save the request if the receiver email doesn't have the devepment value
             if (RECEIVER_EMAIL !== 'sntg.ovalde@gmail.com') {
-                message.cc = ['ElianAlmonte@cantolegal.com'];
                 message.bcc = BCC_EMAIL;
 
                 // Guardar la solicitud en la base de datos
