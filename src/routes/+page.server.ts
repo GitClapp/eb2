@@ -159,6 +159,7 @@ export const actions = {
             const fullName = formData.get("fullName");
             const email = formData.get("email");
             const phone = formData.get("phone");
+            const country = formData.get("country");
             const linkedin = formData.get("linkedin");
             let cvFile = formData.get("cv") as File | null;
 
@@ -209,6 +210,9 @@ export const actions = {
                     </p>
                     <p style="font-size: inherit; margin: 10px 0; color: inherit;">
                         <strong>Teléfono:</strong> ${phone || "No proporcionado"}
+                    </p>
+                    <p style="font-size: inherit; margin: 10px 0; color: inherit;">
+                        <strong>País:</strong> ${country || "No proporcionado"}
                     </p>
                     <p style="font-size: inherit; margin: 10px 0;">
                         <strong>LinkedIn:</strong> 
@@ -289,6 +293,7 @@ export const actions = {
                     email,
                     phone,
                     linkedin,
+                    country,
                     academicLevel,
                     yearsOfExperience,
                     currentField,

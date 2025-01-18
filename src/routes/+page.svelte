@@ -7,8 +7,16 @@
 	import { baseImageRoute, baseRoute, email, fullName, phone, ready } from './stores';
 	import { browser } from '$app/environment';
 	import Separator from './components/separator.svelte';
+	import type { CountryCode } from 'svelte-tel-input/types';
+	import { normalizedCountries } from 'svelte-tel-input';
 
 	let valid: boolean;
+	let countryName: string | undefined;
+	let selectedCountry: CountryCode | null | undefined;
+	$: selectedCountry,
+		selectedCountry
+			? (countryName = normalizedCountries.find((el) => el.iso2 === selectedCountry)?.name)
+			: (countryName = '');
 
 	let fileInput: HTMLInputElement;
 	let fileName: string;
@@ -119,8 +127,9 @@
 				}
 			}}
 		>
-			<div class="previousInfo hide">
+			<div class="redundantInfo hide">
 				<input type="tel" bind:value={$phone} placeholder="Teléfono" name="phone" />
+				<input type="text" bind:value={countryName} placeholder="Country" name="country" />
 			</div>
 
 			<label for="fullName"><span style="color: #ff4444;">*</span> Nombre Completo:</label>
@@ -144,7 +153,7 @@
 			/>
 
 			<label for="phone"><span style="color: #ff4444;">*</span> Teléfono:</label>
-			<PhoneInput bind:value={$phone} bind:valid required={true} />
+			<PhoneInput bind:selectedCountry bind:value={$phone} bind:valid required={true} />
 
 			<div
 				class="noCurriculum"
