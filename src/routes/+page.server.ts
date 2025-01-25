@@ -6,6 +6,12 @@ import { addDoc, collection } from 'firebase/firestore';
 import type { Options } from "nodemailer/lib/mailer";
 import { getTextExtractor } from 'office-text-extractor'
 
+let startTime = Date.now();
+const logTime = (task: string) => {
+    const elapsed = Date.now() - startTime;
+    console.log(`${task} was completed after ${elapsed / 1000} seconds.`);
+};
+
 const sendEmail = async (message: Options) => {
     await new Promise((resolve, reject) => {
         transporter.sendMail(message, (err, info) => {
@@ -22,6 +28,8 @@ const sendEmail = async (message: Options) => {
 const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: string): Promise<string | null> => {
     try {
         const arrayBuffer = await cvFile.arrayBuffer();
+        logTime('Array buffer creation');
+
         const curriculum = new File(
             [arrayBuffer], // File content
             cvFile.name, // File name
@@ -38,6 +46,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
                 file: curriculum,
                 purpose: "vision",
             });
+            logTime('Image file creation');
 
             thread = await openai.beta.threads.create({
                 messages: [
@@ -56,15 +65,17 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
                     }
                 ]
             });
+            logTime('Thread creation for image');
         } else {
-            const file = await openai.files.create({
+            const extractor = getTextExtractor();
+            fileText = await extractor.extractText({ input: Buffer.from(arrayBuffer), type: 'buffer' });
+            logTime('Text extraction');
+
+            const file = fileText ? undefined : await openai.files.create({
                 file: curriculum,
                 purpose: "assistants",
             });
-
-            const extractor = getTextExtractor();
-            fileText = await extractor.extractText({ input: Buffer.from(arrayBuffer), type: 'buffer' });
-            console.log(fileText);
+            logTime('File creation for assistants');
 
             const messageContent = `${`Nombre del cliente: ${name}.`} ${fieldsInfo ? fieldsInfo : ''} ${fileText ? `Transcripción del currículum: ${fileText}` : ''}`;
 
@@ -73,28 +84,31 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
                     {
                         "role": "user",
                         "content": messageContent,
-                        ...(fileText ? {} : {
+                        ...(file ? {
                             "attachments": [
                                 {
                                     file_id: file.id,
                                     tools: [{ type: "code_interpreter" }]
                                 }
                             ]
-                        })
+                        } : {})
                     }
                 ]
             });
+            logTime('Thread creation for text');
         }
 
         const run = await openai.beta.threads.runs.createAndPoll(
             thread.id,
             { assistant_id: "asst_uaxC7bMjMKTAvMITFywk2gRK" }
         );
+        logTime('Thread run and poll');
 
         if (run.status === 'completed') {
             const messages = await openai.beta.threads.messages.list(
                 run.thread_id
             );
+            logTime('Messages list retrieval');
 
             const lastMessage = messages.data[0].content[0];
             if (lastMessage.type === 'text') {
@@ -113,26 +127,29 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
     }
 }
 
-const evaluateProfileWithAI = async (fieldsInfo: string): Promise<string | null> => {
+const evaluateProfileWithAI = async (name: string, fieldsInfo: string): Promise<string | null> => {
     try {
         const thread = await openai.beta.threads.create({
             messages: [
                 {
                     "role": "user",
-                    "content": fieldsInfo,
+                    "content": `Nombre del cliente: ${name}. ${fieldsInfo}`,
                 }
             ]
         });
+        logTime('Thread creation');
 
         const run = await openai.beta.threads.runs.createAndPoll(
             thread.id,
             { assistant_id: "asst_uaxC7bMjMKTAvMITFywk2gRK" }
         );
+        logTime('Thread run and poll');
 
         if (run.status === 'completed') {
             const messages = await openai.beta.threads.messages.list(
                 run.thread_id
             );
+            logTime('Messages list retrieval');
 
             const lastMessage = messages.data[0].content[0];
             if (lastMessage.type === 'text') {
@@ -154,8 +171,12 @@ const evaluateProfileWithAI = async (fieldsInfo: string): Promise<string | null>
 
 export const actions = {
     default: async ({ request }) => {
+        startTime = Date.now();
+
         try {
             const formData = await request.formData();
+            logTime('Form data retrieval');
+
             const fullName = formData.get("fullName");
             const email = formData.get("email");
             const phone = formData.get("phone");
@@ -173,6 +194,7 @@ export const actions = {
                     lastModified: cvFile.lastModified,
                 });
             }
+            logTime('File processing');
 
             // Obtener los valores de los campos select
             const academicLevel = formData.get("academicLevel");
@@ -187,6 +209,7 @@ export const actions = {
                     error: "The is no cv file and the fields are not complete. Email has not been sent.",
                 };
             }
+            logTime('Field validation');
 
             const subject = `${fullName} quiere una evaluación de su perfil para obtener una Visa EB2`;
 
@@ -195,6 +218,7 @@ export const actions = {
                 const arrayBuffer = await cvFile.arrayBuffer();
                 cvAttachment = Buffer.from(arrayBuffer);
             }
+            logTime('Attachment processing');
 
             // Construir el contenido del email
             let html = `
@@ -234,15 +258,15 @@ export const actions = {
                 `;
 
                 fieldsInfo = `
-                    Nombre Completo: ${fullName}
-                    Nivel Académico: ${academicLevel}
-                    Años de Experiencia Profesional: ${yearsOfExperience}
-                    Área o Campo Profesional Actual: ${currentField}
-                    Reconocimientos o Premios: ${awards}
+                    Nivel Académico: ${academicLevel}.
+                    Años de Experiencia Profesional: ${yearsOfExperience}.
+                    Área o Campo Profesional Actual: ${currentField}.
+                    Reconocimientos o Premios: ${awards}.
                 `
             }
 
             html += `</div>`;
+            logTime('Email content construction');
 
             // Obtener la evaluación de IA
             let AIEvaluation: string | null = null;
@@ -250,8 +274,9 @@ export const actions = {
                 AIEvaluation = await evaluateFileWithAI(cvFile, fullName as string, fieldsInfo);
             }
             else {
-                AIEvaluation = await evaluateProfileWithAI(fieldsInfo);
+                AIEvaluation = await evaluateProfileWithAI(fullName as string, fieldsInfo);
             }
+            logTime('AI evaluation');
 
             // Agregar sección de "Evaluación Inicial" si AIEvaluation no es nulo
             if (AIEvaluation) {
@@ -279,6 +304,7 @@ export const actions = {
                     ]
                     : [],
             };
+            logTime('Message construction');
 
             // Send copies of the email and save the request if the receiver email doesn't have the devepment value
             if (RECEIVER_EMAIL !== 'sntg.ovalde@gmail.com') {
@@ -304,9 +330,11 @@ export const actions = {
 
                 await addDoc(colReference, docData);
             }
+            logTime('Database save');
 
             // Enviar el correo
             await sendEmail(message);
+            logTime('Email sending');
 
             return {
                 success: "Email sent.",
