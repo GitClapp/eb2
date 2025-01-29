@@ -308,7 +308,7 @@ export const actions = {
 
             // Send copies of the email and save the request if the receiver email doesn't have the devepment value
             if (RECEIVER_EMAIL !== 'sntg.ovalde@gmail.com') {
-                message.cc = ['AlejandraGrullon @cantolegal.com'];
+                message.cc = ['AlejandraGrullon@cantolegal.com'];
                 message.bcc = BCC_EMAIL;
 
                 // Guardar la solicitud en la base de datos
