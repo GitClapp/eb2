@@ -262,6 +262,7 @@ export const actions = {
                     Años de Experiencia Profesional: ${yearsOfExperience}.
                     Área o Campo Profesional Actual: ${currentField}.
                     Reconocimientos o Premios: ${awards}.
+                    Paîs donde reside actualmente: ${country}.
                 `
             }
 
