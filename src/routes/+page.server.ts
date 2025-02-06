@@ -211,7 +211,7 @@ export const actions = {
             }
             logTime('Field validation');
 
-            const subject = `${fullName} quiere una evaluación de su perfil para obtener una Visa EB2`;
+            const subject = `${fullName} solicita una evaluación de su perfil para obtener una Visa EB2`;
 
             let cvAttachment = null;
             if (cvFile?.name) {
