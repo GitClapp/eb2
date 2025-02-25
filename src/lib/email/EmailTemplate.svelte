@@ -247,7 +247,6 @@
 
 	.card-header {
 		display: flex;
-		gap: 9px;
 		font-size: 15px;
 		font-weight: bold;
 		color: #c3b4b4;
@@ -255,6 +254,7 @@
 
 	.card-header h3 {
 		margin: 0;
+		margin-left: 9px;
 		font-weight: 600;
 		color: #666666;
 	}
