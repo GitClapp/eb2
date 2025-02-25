@@ -134,7 +134,7 @@
 				<div class="card">
 					<div class="card-header">
 						<img
-							src="https://eb2.cantolegal.com/images/svg/{info.icon}.svg"
+							src="https://eb2.cantolegal.com/images/svg/{info.icon}.png"
 							width="20"
 							height="20"
 							aria-hidden="true"
@@ -158,7 +158,7 @@
 				<div class="card">
 					<div class="card-header">
 						<img
-							src="https://eb2.cantolegal.com/images/svg/{info.icon}.svg"
+							src="https://eb2.cantolegal.com/images/svg/{info.icon}.png"
 							width="20"
 							height="20"
 							aria-hidden="true"
@@ -175,29 +175,31 @@
 	</div>
 
 	<!-- AI Generated Evaluation Section -->
-	<div class="section">
-		<h2>Generado por Inteligencia Artificial</h2>
-		<div class="section-content">
-			{#each evaluation as info}
-				<div class="card">
-					<div class="card-header">
-						<img
-							src="https://eb2.cantolegal.com/images/svg/{info.icon}.svg"
-							width="20"
-							height="20"
-							aria-hidden="true"
-							alt={info.title}
-						/>
-						<h3>{info.title}</h3>
+	{#if aiEvaluation}
+		<div class="section">
+			<h2>Generado por Inteligencia Artificial</h2>
+			<div class="section-content">
+				{#each evaluation as info}
+					<div class="card">
+						<div class="card-header">
+							<img
+								src="https://eb2.cantolegal.com/images/svg/{info.icon}.png"
+								width="20"
+								height="20"
+								aria-hidden="true"
+								alt={info.title}
+							/>
+							<h3>{info.title}</h3>
+						</div>
+						<div class="card-body">
+							<!-- Use @html to render HTML from the AI evaluation safely -->
+							<p>{@html info.description}</p>
+						</div>
 					</div>
-					<div class="card-body">
-						<!-- Use @html to render HTML from the AI evaluation safely -->
-						<p>{@html info.description}</p>
-					</div>
-				</div>
-			{/each}
+				{/each}
+			</div>
 		</div>
-	</div>
+	{/if}
 </div>
 
 <style>
