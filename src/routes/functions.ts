@@ -1,3 +1,7 @@
+import toast from "svelte-french-toast";
+import { dictionary } from "./stores"
+import { get } from 'svelte/store';
+
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -297,9 +301,6 @@ export function escapeAndFormat(text: string): string {
     return convertMarkdown(newLinesText);
 }
 
-import toast from "svelte-french-toast";
-import { dictionary } from "./stores"
-import { get } from 'svelte/store';
 let storedDictionary = get(dictionary);
 export function anErrorOccurred(error: string = storedDictionary.errorOccurred) {
     toast.error(error, { position: 'bottom-center' });

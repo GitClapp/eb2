@@ -4,8 +4,32 @@ import { db } from "$lib/firebase/eb2.server";
 import { openai } from "$lib/openai/eb2.server";
 import { addDoc, collection } from 'firebase/firestore';
 import type { Options } from "nodemailer/lib/mailer";
-import { getTextExtractor } from 'office-text-extractor'
+import { getTextExtractor } from 'office-text-extractor';
+import EmailTemplate from "$lib//email/EmailTemplate.svelte";
+import juice from "juice";
+import type Mail from "nodemailer/lib/mailer";
+import PuppeteerHTMLPDF from "puppeteer-html-pdf";
 
+
+async function htmlToPDF(htmlString: string): Promise<File> {
+    try {
+        const htmlPDF = new PuppeteerHTMLPDF();
+        htmlPDF.setOptions({ format: "A4" });
+
+        // Generate PDF buffer from HTML string
+        const pdfBuffer = await htmlPDF.create(htmlString);
+
+        // Create a File object from the buffer
+        const pdfFile = new File([pdfBuffer], "document.pdf", { type: "application/pdf" });
+
+        return pdfFile;
+    } catch (error) {
+        console.error("Error generating PDF:", error);
+        throw error;
+    }
+}
+
+// Log timing utility.
 let startTime = Date.now();
 const logTime = (task: string) => {
     const elapsed = Date.now() - startTime;
@@ -31,11 +55,11 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
         logTime('Array buffer creation');
 
         const curriculum = new File(
-            [arrayBuffer], // File content
-            cvFile.name, // File name
+            [arrayBuffer],
+            cvFile.name,
             {
-                type: cvFile.type, // MIME type
-                lastModified: cvFile.lastModified, // Last modified timestamp
+                type: cvFile.type,
+                lastModified: cvFile.lastModified,
             }
         );
 
@@ -105,9 +129,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
         logTime('Thread run and poll');
 
         if (run.status === 'completed') {
-            const messages = await openai.beta.threads.messages.list(
-                run.thread_id
-            );
+            const messages = await openai.beta.threads.messages.list(run.thread_id);
             logTime('Messages list retrieval');
 
             const lastMessage = messages.data[0].content[0];
@@ -125,7 +147,7 @@ const evaluateFileWithAI = async (cvFile: File, name: string, fieldsInfo?: strin
         console.error(error);
         return null;
     }
-}
+};
 
 const evaluateProfileWithAI = async (name: string, fieldsInfo: string): Promise<string | null> => {
     try {
@@ -146,9 +168,7 @@ const evaluateProfileWithAI = async (name: string, fieldsInfo: string): Promise<
         logTime('Thread run and poll');
 
         if (run.status === 'completed') {
-            const messages = await openai.beta.threads.messages.list(
-                run.thread_id
-            );
+            const messages = await openai.beta.threads.messages.list(run.thread_id);
             logTime('Messages list retrieval');
 
             const lastMessage = messages.data[0].content[0];
@@ -166,8 +186,20 @@ const evaluateProfileWithAI = async (name: string, fieldsInfo: string): Promise<
         console.log(error);
         return null;
     }
-}
+};
 
+function formatAIEvaluation(response: string): string {
+    // Replace **text** with <strong>text</strong>
+    let formattedResponse = response.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    // Replace ### Title with an h3 tag
+    formattedResponse = formattedResponse.replace(/^###\s*(.*)$/gm, `<h3 style="font-size: 1.2rem;">$1</h3>`);
+    // Wrap paragraphs
+    formattedResponse = formattedResponse
+        .split(/\n\s*\n|\n\d+\.\s/)
+        .map(paragraph => `<p style="margin: 10px 0;">${paragraph.trim()}</p>`)
+        .join("");
+    return formattedResponse;
+}
 
 export const actions = {
     default: async ({ request }) => {
@@ -177,18 +209,16 @@ export const actions = {
             const formData = await request.formData();
             logTime('Form data retrieval');
 
-            const fullName = formData.get("fullName");
-            const email = formData.get("email");
-            const phone = formData.get("phone");
-            const country = formData.get("country");
-            const linkedin = formData.get("linkedin");
+            const fullName = formData.get("fullName") as string;
+            const email = formData.get("email") as string;
+            const phone = formData.get("phone") as string;
+            const country = formData.get("country") as string;
+            const linkedin = formData.get("linkedin") as string;
             let cvFile = formData.get("cv") as File | null;
 
             if (cvFile?.name) {
-                // Cambiar el nombre del archivo al nombre completo sin espacios, manteniendo su extensión original
-                const newFileName = `${String(fullName).replace(/\s+/g, '')}.${cvFile.name.split('.').pop()}`;
-
-                // Crear un nuevo objeto File con el nombre actualizado
+                // Rename the file to the full name without spaces, preserving its extension.
+                const newFileName = `${fullName.replace(/\s+/g, '')}.${cvFile.name.split('.').pop()}`;
                 cvFile = new File([await cvFile.arrayBuffer()], newFileName, {
                     type: cvFile.type,
                     lastModified: cvFile.lastModified,
@@ -196,22 +226,18 @@ export const actions = {
             }
             logTime('File processing');
 
-            // Obtener los valores de los campos select
-            const academicLevel = formData.get("academicLevel");
-            const yearsOfExperience = formData.get("yearsOfExperience");
-            const currentField = formData.get("currentField");
-            const awards = formData.get("awards");
+            let academicLevel = formData.get("academicLevel") as string;
+            let yearsOfExperience = formData.get("yearsOfExperience") as string;
+            let currentField = formData.get("currentField") as string;
+            let awards = formData.get("awards") as string;
 
             let fieldsInfo = "";
-
             if ((!cvFile || !cvFile?.name) && (!academicLevel || !yearsOfExperience || !currentField || !awards)) {
-                return {
-                    error: "The is no cv file and the fields are not complete. Email has not been sent.",
-                };
+                return { error: "No se adjuntó un CV y los campos adicionales no están completos. No se envió el email." };
             }
             logTime('Field validation');
 
-            const subject = `${fullName} solicita una evaluación de su perfil para obtener una Visa EB2`;
+            const subject = `${fullName} | Solicitud de evaluación para Visa EB2`;
 
             let cvAttachment = null;
             if (cvFile?.name) {
@@ -220,102 +246,77 @@ export const actions = {
             }
             logTime('Attachment processing');
 
-            // Construir el contenido del email
-            let html = `
-                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111; font-size: 1rem;">
-                    <h1 style="font-size: 1.3rem; color: #f27931;">
-                        Solicitud de Evaluación EB2
-                    </h1>
-                    <p style="font-size: inherit; margin: 10px 0; color: inherit;">
-                        <strong>Nombre Completo:</strong> ${fullName}
-                    </p>
-                    <p style="font-size: inherit; margin: 10px 0; color: inherit;">
-                        <strong>Correo Electrónico:</strong> ${email}
-                    </p>
-                    <p style="font-size: inherit; margin: 10px 0; color: inherit;">
-                        <strong>Teléfono:</strong> ${phone || "No proporcionado"}
-                    </p>
-                    <p style="font-size: inherit; margin: 10px 0; color: inherit;">
-                        <strong>País:</strong> ${country || "No proporcionado"}
-                    </p>
-                    <p style="font-size: inherit; margin: 10px 0;">
-                        <strong>LinkedIn:</strong> 
-                        ${linkedin ? `<a href="${linkedin}" target="_blank">${linkedin}</a>` : "No proporcionado"}
-                    </p>
-                    ${cvFile?.name
-                    ? `<p style="font-size: inherit; margin: 10px 0;"><strong>CV adjunto:</strong> ${cvFile?.name}</p>`
-                    : "<p style='font-size: inherit; margin: 10px 0;'><strong>CV:</strong> No se adjuntó un archivo</p>"
-                }
-            `;
-
-            // Si los campos adicionales están completos, se añaden al correo
             if (academicLevel && yearsOfExperience && currentField && awards) {
-                html += `
-                    <p style="font-size: inherit; margin: 30px 0 10px;"><strong>Nivel Académico:</strong> ${academicLevel}</p>
-                    <p style="font-size: inherit; margin: 10px 0;"><strong>Años de Experiencia Profesional:</strong> ${yearsOfExperience}</p>
-                    <p style="font-size: inherit; margin: 10px 0;"><strong>Área o Campo Profesional Actual:</strong> ${currentField}</p>
-                    <p style="font-size: inherit; margin: 10px 0;"><strong>Reconocimientos o Premios:</strong> ${awards}</p>
-                `;
-
                 fieldsInfo = `
                     Nivel Académico: ${academicLevel}.
                     Años de Experiencia Profesional: ${yearsOfExperience}.
                     Área o Campo Profesional Actual: ${currentField}.
                     Reconocimientos o Premios: ${awards}.
-                    Paîs donde reside actualmente: ${country}.
-                `
-            }
-
-            html += `</div>`;
-            logTime('Email content construction');
-
-            // Obtener la evaluación de IA
-            let AIEvaluation: string | null = null;
-            if (cvFile?.name) {
-                AIEvaluation = await evaluateFileWithAI(cvFile, fullName as string, fieldsInfo);
-            }
-            else {
-                AIEvaluation = await evaluateProfileWithAI(fullName as string, fieldsInfo);
-            }
-            logTime('AI evaluation');
-
-            // Agregar sección de "Evaluación Inicial" si AIEvaluation no es nulo
-            if (AIEvaluation) {
-                html += `
-                    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111; font-size: 1rem; margin-top: 2.5rem">
-                        <h2 style="font-size: 1.3rem; color: #f27931; margin: 0;">Evaluación Inicial</h2>
-                        ${formatAIEvaluation(AIEvaluation)}
-                    </div>
+                    País donde reside actualmente: ${country}.
                 `;
             }
 
+            // Get AI evaluation either from the CV file or from the profile.
+            let AIEvaluation: string | null = null;
+            if (cvFile?.name) {
+                AIEvaluation = await evaluateFileWithAI(cvFile, fullName, fieldsInfo);
+            } else {
+                AIEvaluation = await evaluateProfileWithAI(fullName, fieldsInfo);
+            }
+            logTime('AI evaluation');
+
+            const formattedAIEvaluation = AIEvaluation ? formatAIEvaluation(AIEvaluation) : "";
+
+            // Render the email HTML using the EmailTemplate component's SSR API.
+            // Casting to any to access the static render() method.
+            let { html, css } = (EmailTemplate as any).render({
+                fullName,
+                email,
+                phone,
+                country,
+                linkedin,
+                cvFileName: cvFile?.name || "",
+                academicLevel,
+                yearsOfExperience,
+                currentField,
+                awards,
+                aiEvaluation: formattedAIEvaluation
+            });
+            const htmlWithStyles = `<style>${css.code}</style>${html}`;
+            html = juice(htmlWithStyles);
+            logTime('Email content rendered via Svelte');
+
+            const emailAttachments: Mail.Attachment[] = [];
+            if (cvAttachment) {
+                emailAttachments.push({
+                    filename: cvFile?.name,
+                    content: cvAttachment,
+                    contentType: cvFile?.type,
+                });
+            }
+            if (formattedAIEvaluation) {
+                emailAttachments.push({
+                    filename: "Evaluación.pdf",
+                    content: Buffer.from(await (await htmlToPDF(formattedAIEvaluation)).arrayBuffer()),
+                    contentType: "application/pdf",
+                });
+            }
             const message: Options = {
                 from: GOOGLE_EMAIL,
                 to: RECEIVER_EMAIL,
                 subject: subject,
                 html: html,
-                replyTo: email ? String(email) : undefined,
-                attachments: cvAttachment
-                    ? [
-                        {
-                            filename: cvFile?.name,
-                            content: cvAttachment,
-                            contentType: cvFile?.type,
-                        },
-                    ]
-                    : [],
+                replyTo: email,
+                attachments: emailAttachments,
             };
             logTime('Message construction');
 
-            // Send copies of the email and save the request if the receiver email doesn't have the devepment value
             if (RECEIVER_EMAIL !== 'sntg.ovalde@gmail.com') {
                 message.cc = ['AlejandraGrullon@cantolegal.com'];
                 message.bcc = BCC_EMAIL;
 
-                // Guardar la solicitud en la base de datos
                 const colReference = collection(db, 'solicitudes');
                 const timestamp = new Date();
-
                 const docData = {
                     fullName,
                     email,
@@ -327,42 +328,20 @@ export const actions = {
                     currentField,
                     awards,
                     date: timestamp,
-                    evaluation: AIEvaluation || ''
+                    evaluation: formattedAIEvaluation
                 };
-
                 await addDoc(colReference, docData);
             }
             logTime('Database save');
 
-            // Enviar el correo
             await sendEmail(message);
             logTime('Email sending');
 
-            return {
-                success: "Email sent.",
-            };
+            return { success: "Email sent." };
 
         } catch (error) {
             console.error(error);
-            return {
-                error: "There was an error sending the email.",
-            };
+            return { error: "There was an error sending the email." };
         }
     },
 };
-
-function formatAIEvaluation(response: string): string {
-    // Reemplaza **texto** por <strong>texto</strong> para negritas
-    let formattedResponse = response.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-
-    // Reemplaza ### Título con <h3>Título</h3> para subtítulos
-    formattedResponse = formattedResponse.replace(/^###\s*(.*)$/gm, `<h3 style="font-size: 1.2rem;">$1</h3>`);
-
-    // Divide el texto en párrafos
-    formattedResponse = formattedResponse
-        .split(/\n\s*\n|\n\d+\.\s/) // Dividir por líneas en blanco o números de sección
-        .map(paragraph => `<p style="margin: 10px 0; font-size: inherit; color: inherit;">${paragraph.trim()}</p>`) // Envolver cada sección en <p>
-        .join("");
-
-    return formattedResponse;
-}
