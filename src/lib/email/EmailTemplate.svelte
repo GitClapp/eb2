@@ -204,7 +204,6 @@
 	/* Container */
 	.container {
 		margin: 0 auto;
-		padding: 1rem;
 		font-family: Arial, sans-serif;
 		font-size: 16px;
 		line-height: 1.4;
