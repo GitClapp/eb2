@@ -214,7 +214,7 @@
 
 	/* Section */
 	.section {
-		width: 100%;
+		width: 80%;
 		max-width: 700px;
 		margin: auto;
 		margin-bottom: 2rem;
