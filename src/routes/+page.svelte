@@ -68,7 +68,7 @@
 			if (browser) {
 				goto(`${baseRoute}/exito`);
 			}
-		} else if (form?.error && isSubmitting) {
+		} else if (form?.error) {
 			toast.error('La solicitud no ha podido ser enviada. Intenta más tarde.', {
 				style: 'font-size: 1.2em;',
 			});

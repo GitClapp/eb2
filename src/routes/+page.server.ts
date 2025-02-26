@@ -266,6 +266,7 @@ export const actions = {
             logTime('AI evaluation');
 
             const formattedAIEvaluation = AIEvaluation ? formatAIEvaluation(AIEvaluation) : "";
+            console.log(formattedAIEvaluation);
 
             // Render the email HTML using the EmailTemplate component's SSR API.
             // Casting to any to access the static render() method.

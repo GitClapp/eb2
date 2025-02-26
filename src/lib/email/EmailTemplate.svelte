@@ -27,32 +27,46 @@
 
 		// Find the paragraph that contains the header "Sugerencia de Email..." (case-insensitive).
 		const headerIndex = paragraphs.findIndex((p) =>
-			/Sugerencia\s*de\s+(?:Email|Correo Electr[oó]nico)/i.test($(p).text()),
+			/Sugerencia\s*de\s+(?:Email|Correo Electr[oó]nico)/i.test($(p).text().trim()),
 		);
 		if (headerIndex === -1) return '';
 
-		// Look for the first marker ("---") after the header.
+		let emailStart = headerIndex + 1;
 		let startMarkerIndex = -1;
+
+		// Look for the first "---" after the header.
 		for (let i = headerIndex + 1; i < paragraphs.length; i++) {
 			if ($(paragraphs[i]).text().trim() === '---') {
 				startMarkerIndex = i;
 				break;
 			}
 		}
-		if (startMarkerIndex === -1) return '';
 
-		// The email content starts in the paragraph immediately after the start marker.
-		const emailStart = startMarkerIndex + 1;
+		// If a start marker was found, set emailStart to the paragraph after it.
+		if (startMarkerIndex !== -1) {
+			emailStart = startMarkerIndex + 1;
+		}
 
-		// Find the end marker: the next paragraph that contains exactly "---".
+		// Find the end marker ("---") after the start of the email.
 		let endMarkerIndex = paragraphs.findIndex(
 			(p, i) => i >= emailStart && $(p).text().trim() === '---',
 		);
-		if (endMarkerIndex === -1) endMarkerIndex = paragraphs.length;
 
-		// Collect and return the HTML of the paragraphs that form the email.
+		// If no end marker is found, fall back to detecting section headers that use <strong>.
+		if (endMarkerIndex === -1) {
+			endMarkerIndex = paragraphs.findIndex(
+				(p, i) => i > emailStart && $(p).children('strong').length > 0,
+			);
+			// If no header is found, assume the email goes to the end.
+			if (endMarkerIndex === -1) endMarkerIndex = paragraphs.length;
+		}
+
+		// Extract and properly format the email text.
 		const emailParagraphs = paragraphs.slice(emailStart, endMarkerIndex);
-		return emailParagraphs.map((p) => $.html(p)).join('');
+		const extractedEmail = emailParagraphs.map((p) => $.html(p)).join('');
+
+		console.log('extractedEmail:', extractedEmail);
+		return extractedEmail || '';
 	}
 
 	// Basic info
