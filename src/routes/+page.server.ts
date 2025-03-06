@@ -284,7 +284,6 @@ export const actions = {
                         contentType: "application/pdf",
                     });
                 } catch (error) {
-                    formattedAIEvaluation = AIEvaluation || "";
                     console.error(error);
                 }
             }
