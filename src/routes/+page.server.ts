@@ -265,8 +265,30 @@ export const actions = {
             }
             logTime('AI evaluation');
 
-            const formattedAIEvaluation = AIEvaluation ? formatAIEvaluation(AIEvaluation) : "";
+            let formattedAIEvaluation = AIEvaluation ? formatAIEvaluation(AIEvaluation) : "";
             console.log(formattedAIEvaluation);
+
+            const emailAttachments: Mail.Attachment[] = [];
+            if (cvAttachment) {
+                emailAttachments.push({
+                    filename: cvFile?.name,
+                    content: cvAttachment,
+                    contentType: cvFile?.type,
+                });
+            }
+            if (formattedAIEvaluation) {
+                try {
+                    emailAttachments.push({
+                        filename: "Evaluación.pdf",
+                        content: Buffer.from(await (await htmlToPDF(formattedAIEvaluation)).arrayBuffer()),
+                        contentType: "application/pdf",
+                    });
+                } catch (error) {
+                    formattedAIEvaluation = AIEvaluation || "";
+                    console.error(error);
+                }
+            }
+            logTime('PDF attachments creation');
 
             // Render the email HTML using the EmailTemplate component's SSR API.
             // Casting to any to access the static render() method.
@@ -287,21 +309,6 @@ export const actions = {
             html = juice(htmlWithStyles);
             logTime('Email content rendered via Svelte');
 
-            const emailAttachments: Mail.Attachment[] = [];
-            if (cvAttachment) {
-                emailAttachments.push({
-                    filename: cvFile?.name,
-                    content: cvAttachment,
-                    contentType: cvFile?.type,
-                });
-            }
-            if (formattedAIEvaluation) {
-                emailAttachments.push({
-                    filename: "Evaluación.pdf",
-                    content: Buffer.from(await (await htmlToPDF(formattedAIEvaluation)).arrayBuffer()),
-                    contentType: "application/pdf",
-                });
-            }
             const message: Options = {
                 from: GOOGLE_EMAIL,
                 to: RECEIVER_EMAIL,
@@ -310,7 +317,6 @@ export const actions = {
                 replyTo: email,
                 attachments: emailAttachments,
             };
-            logTime('Message construction');
 
             if (RECEIVER_EMAIL !== 'sntg.ovalde@gmail.com') {
                 message.cc = ['AlejandraGrullon@cantolegal.com'];

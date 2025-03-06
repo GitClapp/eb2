@@ -10,7 +10,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
-		"format": "prettier --plugin-search-dir . --write ."
+		"format": "prettier --plugin-search-dir . --write .",
+		"postinstall": "npx puppeteer browsers install chrome"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.28.1",
@@ -40,6 +41,7 @@
 		"nodemailer": "^6.9.15",
 		"office-text-extractor": "^3.0.3",
 		"openai": "^4.71.0",
+		"puppeteer": "^24.4.0",
 		"puppeteer-html-pdf": "^4.0.8",
 		"svelte-french-toast": "^1.0.3",
 		"svelte-tel-input": "^3.5.2",
