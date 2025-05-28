@@ -318,7 +318,6 @@ export const actions = {
             };
 
             if (RECEIVER_EMAIL !== 'sntg.ovalde@gmail.com') {
-                message.cc = ['AlejandraGrullon@cantolegal.com'];
                 message.bcc = BCC_EMAIL;
 
                 const colReference = collection(db, 'solicitudes');
